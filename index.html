@@ -6,18 +6,46 @@
     <title>台股個股 & 台指期貨 波浪理論算牌器</title>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; background: #f4f6f8; color: #333; display: flex; height: 100vh; overflow: hidden; }
         
-        /* 動態字級控制類別 */
-        body.font-sm .main-content { font-size: 13px; }
-        body.font-md .main-content { font-size: 15px; }
-        body.font-lg .main-content { font-size: 18px; }
+        /* 根目錄動態基準字級：隨螢幕寬度自動平滑縮放 */
+        html {
+            font-size: clamp(14px, 1.1vw, 18px);
+        }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background: #f4f6f8; 
+            color: #333; 
+            display: flex; 
+            min-height: 100vh; 
+        }
+        
+        /* 手動字級輔助控制 */
+        body.font-sm .main-content { font-size: 0.85rem; }
+        body.font-md .main-content { font-size: 1rem; }
+        body.font-lg .main-content { font-size: 1.15rem; }
 
         /* 左側歷史紀錄欄 */
-        .sidebar { width: 320px; background: #1a202c; color: white; display: flex; flex-direction: column; border-right: 1px solid #2d3748; flex-shrink: 0; }
-        .sidebar-header { padding: 20px; border-bottom: 1px solid #2d3748; display: flex; justify-content: space-between; align-items: center; }
-        .sidebar-header h3 { margin: 0; font-size: 16px; color: #e2e8f0; }
-        .clear-btn { background: #718096; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; }
+        .sidebar { 
+            width: clamp(260px, 22vw, 320px); 
+            background: #1a202c; 
+            color: white; 
+            display: flex; 
+            flex-direction: column; 
+            border-right: 1px solid #2d3748; 
+            flex-shrink: 0; 
+        }
+        .sidebar-header { 
+            padding: clamp(12px, 1.5vw, 20px); 
+            border-bottom: 1px solid #2d3748; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .sidebar-header h3 { margin: 0; font-size: 1rem; color: #e2e8f0; }
+        .clear-btn { background: #718096; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; cursor: pointer; }
         .clear-btn:hover { background: #4a5568; }
         .history-list { flex: 1; overflow-y: auto; padding: 10px; }
         .history-item { background: #2d3748; padding: 12px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; position: relative; border-left: 4px solid #718096; }
@@ -26,47 +54,61 @@
         .history-item.wave5 { border-left-color: #dd6b20; }
         .history-item.futures { border-left-color: #3182ce; }
         .history-item:hover { background: #4a5568; }
-        .history-title { font-weight: bold; font-size: 15px; color: #e2e8f0; display: flex; justify-content: space-between; margin-bottom: 4px; padding-right: 20px; }
-        .history-detail { font-size: 12px; color: #cbd5e0; line-height: 1.4; }
-        .delete-item-btn { position: absolute; right: 10px; top: 10px; color: #a0aec0; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .history-title { font-weight: bold; font-size: 0.95rem; color: #e2e8f0; display: flex; justify-content: space-between; margin-bottom: 4px; padding-right: 20px; }
+        .history-detail { font-size: 0.8rem; color: #cbd5e0; line-height: 1.4; }
+        .delete-item-btn { position: absolute; right: 10px; top: 10px; color: #a0aec0; font-size: 0.9rem; font-weight: bold; cursor: pointer; }
         .delete-item-btn:hover { color: #e53e3e; }
         
-        /* 右側主內容 */
-        .main-content { flex: 1; overflow-y: auto; padding: 30px; }
-        .container { max-width: 860px; margin: 0 auto; }
-        .card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        /* 右側主內容：內距隨頁面自動調整 */
+        .main-content { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: clamp(12px, 2.5vw, 30px); 
+        }
+        .container { max-width: 900px; margin: 0 auto; width: 100%; }
+        
+        /* 卡片容器：自動適應尺寸 */
+        .card { 
+            background: white; 
+            padding: clamp(15px, 2vw, 24px); 
+            border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+            margin-bottom: 20px; 
+        }
         
         .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 20px; }
-        .header-bar h2 { margin: 0; color: #1a202c; border: none; padding: 0; font-size: 1.5em; }
+        .header-bar h2 { margin: 0; color: #1a202c; border: none; padding: 0; font-size: 1.4rem; }
         
-        /* 第一層主分頁切換 (個股 vs 期貨) */
+        /* 第一層主分頁切換 */
         .main-page-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 3px solid #e2e8f0; padding-bottom: 2px; }
-        .main-page-tab { flex: 1; text-align: center; padding: 12px; font-weight: bold; font-size: 1.1em; cursor: pointer; color: #718096; border-bottom: 4px solid transparent; transition: 0.2s; }
+        .main-page-tab { flex: 1; text-align: center; padding: 10px; font-weight: bold; font-size: 1.05rem; cursor: pointer; color: #718096; border-bottom: 4px solid transparent; transition: 0.2s; }
         .main-page-tab.active { color: #2b6cb0; border-bottom-color: #3182ce; background: #ebf8ff; border-radius: 8px 8px 0 0; }
 
         /* 字級調整按鈕 */
         .font-size-controls { display: flex; gap: 4px; align-items: center; background: #edf2f7; padding: 4px; border-radius: 6px; }
-        .font-size-controls label { font-size: 12px; color: #718096; margin: 0 4px; font-weight: bold; }
-        .fs-btn { border: none; background: transparent; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; color: #4a5568; }
+        .font-size-controls label { font-size: 0.75rem; color: #718096; margin: 0 4px; font-weight: bold; }
+        .fs-btn { border: none; background: transparent; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; cursor: pointer; color: #4a5568; }
         .fs-btn.active { background: white; color: #2b6cb0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
         /* 第二層模式切換 */
         .tab-group { display: flex; gap: 8px; margin-bottom: 20px; }
-        .tab-btn { flex: 1; padding: 10px 4px; font-size: 0.95em; font-weight: bold; border: 2px solid #cbd5e0; background: #edf2f7; color: #4a5568; border-radius: 8px; cursor: pointer; transition: 0.2s; text-align: center; }
+        .tab-btn { flex: 1; padding: 10px 4px; font-size: 0.9rem; font-weight: bold; border: 2px solid #cbd5e0; background: #edf2f7; color: #4a5568; border-radius: 8px; cursor: pointer; transition: 0.2s; text-align: center; }
         .tab-btn.active-up { background: #fff5f5; border-color: #e53e3e; color: #c53030; }
         .tab-btn.active-down { background: #f0fff4; border-color: #38a169; color: #276749; }
         .tab-btn.active-w5 { background: #fffaf0; border-color: #dd6b20; color: #c05621; }
         .tab-btn.active-fut { background: #ebf8ff; border-color: #3182ce; color: #2b6cb0; }
 
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        /* 自動響應式網格布局 */
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        
         .form-group { display: flex; flex-direction: column; }
-        label { font-weight: bold; margin-bottom: 6px; font-size: 0.9em; color: #4a5568; }
-        input, select { padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 1em; background: white; }
+        label { font-weight: bold; margin-bottom: 6px; font-size: 0.85rem; color: #4a5568; }
+        input, select { padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 0.95rem; background: white; width: 100%; }
         
         /* 按鈕區組合 */
         .btn-group { display: flex; gap: 10px; }
-        button.calc-btn { flex: 3; color: white; padding: 12px; border: none; border-radius: 6px; font-size: 1.05em; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button.calc-btn { flex: 3; color: white; padding: 12px; border: none; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
         button.calc-btn.up-bg { background: #e53e3e; }
         button.calc-btn.up-bg:hover { background: #c53030; }
         button.calc-btn.down-bg { background: #38a169; }
@@ -77,30 +119,47 @@
         button.calc-btn.fut-bg:hover { background: #2b6cb0; }
         
         /* 重置按鈕 */
-        button.reset-btn { flex: 1; background: #edf2f7; color: #4a5568; border: 1px solid #cbd5e0; padding: 12px; border-radius: 6px; font-size: 1.05em; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button.reset-btn { flex: 1; background: #edf2f7; color: #4a5568; border: 1px solid #cbd5e0; padding: 12px; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
         button.reset-btn:hover { background: #e2e8f0; color: #1a202c; }
 
-        .section-title { font-weight: bold; font-size: 1.05em; margin-top: 15px; margin-bottom: 10px; color: #2d3748; }
-        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-        th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: center; font-size: 0.95em; }
+        .section-title { font-weight: bold; font-size: 1rem; margin-top: 15px; margin-bottom: 10px; color: #2d3748; }
+        
+        /* 表格自動適應橫向滾動 */
+        .table-responsive { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; min-width: 320px; }
+        th, td { border: 1px solid #e2e8f0; padding: 8px 10px; text-align: center; font-size: 0.9rem; }
         th { background: #edf2f7; }
         .highlight-up { font-weight: bold; color: #e53e3e; background: #fff5f5; }
         .highlight-down { font-weight: bold; color: #38a169; background: #f0fff4; }
         .highlight-w5 { font-weight: bold; color: #dd6b20; background: #fffaf0; }
         .highlight-fut { font-weight: bold; color: #2b6cb0; background: #ebf8ff; }
-        .empty-tip { text-align: center; color: #a0aec0; padding: 20px; font-size: 14px; }
-        .tag { font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 4px; }
+        .empty-tip { text-align: center; color: #a0aec0; padding: 20px; font-size: 0.85rem; }
+        .tag { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 4px; }
         .tag-up { background: #feb2b2; color: #9b2c2c; }
         .tag-down { background: #9ae6b4; color: #22543d; }
         .tag-w5 { background: #fbd38d; color: #7b341e; }
         .tag-fut { background: #bee3f8; color: #2b6cb0; }
 
-        /* 行動裝置響應式 RWD 適應 */
+        /* 行動裝置/小螢幕自動轉換直向布局 */
         @media (max-width: 768px) {
-            body { flex-direction: column; overflow: auto; height: auto; }
-            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #2d3748; max-height: 200px; }
-            .main-content { padding: 15px; }
-            .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            body { 
+                flex-direction: column; 
+                overflow-y: auto; 
+            }
+            .sidebar { 
+                width: 100%; 
+                border-right: none; 
+                border-bottom: 1px solid #2d3748; 
+                max-height: 180px; 
+                flex-shrink: 0;
+            }
+            .main-content { 
+                padding: 12px; 
+                overflow: visible; 
+            }
+            .tab-group {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -123,11 +182,11 @@
             <div class="card">
                 <div class="header-bar">
                     <h2>📈📉 波浪理論算牌器</h2>
-                    <!-- 字級調整 -->
+                    <!-- 字級控制 -->
                     <div class="font-size-controls">
-                        <label>文字:</label>
+                        <label>字體:</label>
                         <button class="fs-btn" id="fsSm" onclick="setFontSize('sm')">小</button>
-                        <button class="fs-btn" id="fsMd" onclick="setFontSize('md')">中</button>
+                        <button class="fs-btn active" id="fsMd" onclick="setFontSize('md')">中</button>
                         <button class="fs-btn" id="fsLg" onclick="setFontSize('lg')">大</button>
                     </div>
                 </div>
@@ -148,21 +207,8 @@
 
                     <div class="grid-3">
                         <div class="form-group">
-                            <label>股號 / 名稱 (可搜尋)</label>
-                            <input type="text" id="stockName" list="stockOptions" placeholder="輸入代號或名稱...">
-                            <datalist id="stockOptions">
-                                <option value="2330 台積電"></option>
-                                <option value="2317 鴻海"></option>
-                                <option value="2454 聯發科"></option>
-                                <option value="2308 台達電"></option>
-                                <option value="2382 廣達"></option>
-                                <option value="3231 緯創"></option>
-                                <option value="3019 亞光"></option>
-                                <option value="2377 微星"></option>
-                                <option value="2393 億光"></option>
-                                <option value="0050 元大台灣50"></option>
-                                <option value="006208 富邦台50"></option>
-                            </datalist>
+                            <label>股號 / 名稱 (自由輸入)</label>
+                            <input type="text" id="stockName" placeholder="例如: 2330 台積電">
                         </div>
                         <div class="form-group">
                             <label id="lblLow">A 波低點 (A Low)</label>
@@ -179,8 +225,8 @@
                 <div id="futuresView" style="display: none;">
                     <div class="grid-4">
                         <div class="form-group">
-                            <label>台指期標的</label>
-                            <input type="text" id="futName" value="台指期 (TX)" placeholder="例如: 台指期全時段">
+                            <label>期貨標的名稱</label>
+                            <input type="text" id="futName" placeholder="例如: 台指期 / 微台">
                         </div>
                         <div class="form-group">
                             <label>合約規格 (每點價值)</label>
@@ -201,14 +247,14 @@
                     </div>
                 </div>
 
-                <!-- 按鈕區：計算 + 重置 -->
+                <!-- 按鈕區 -->
                 <div class="btn-group">
                     <button class="calc-btn up-bg" id="btnCalc" onclick="calculate()">計算並儲存紀錄</button>
                     <button class="reset-btn" onclick="resetForm()">🔄 重置</button>
                 </div>
             </div>
 
-            <!-- 計算結果顯示區 -->
+            <!-- 計算結果區 -->
             <div class="card" id="resultCard" style="display: none;">
                 <div id="dynamicResults"></div>
             </div>
@@ -216,38 +262,14 @@
     </div>
 
     <script>
-        let currentMainTab = 'STOCK'; // STOCK, FUTURES
-        let currentMode = 'UP'; // UP, DOWN, WAVE5
-        let userSetFontSize = false; // 紀錄使用者是否手動切換過字體
+        let currentMainTab = 'STOCK';
+        let currentMode = 'UP';
 
         window.onload = function() {
-            autoAdjustFontSize();
             renderHistory();
         };
 
-        // 監聽螢幕縮放時，若使用者未手動設定過則動態調整大小
-        window.onresize = function() {
-            if (!userSetFontSize) {
-                autoAdjustFontSize();
-            }
-        };
-
-        // 依據瀏覽器寬度自動判斷適當字級
-        function autoAdjustFontSize() {
-            const width = window.innerWidth;
-            if (width < 600) {
-                setFontSize('sm', false);
-            } else if (width < 1200) {
-                setFontSize('md', false);
-            } else {
-                setFontSize('lg', false);
-            }
-        }
-
-        // 調整文字大小
-        function setFontSize(size, isUserAction = true) {
-            if (isUserAction) userSetFontSize = true;
-
+        function setFontSize(size) {
             document.body.classList.remove('font-sm', 'font-md', 'font-lg');
             document.getElementById('fsSm').classList.remove('active');
             document.getElementById('fsMd').classList.remove('active');
@@ -265,7 +287,6 @@
             }
         }
 
-        // 切換主分頁：個股 vs 期貨
         function switchMainTab(tab) {
             currentMainTab = tab;
             const tabStock = document.getElementById('tabStock');
@@ -291,7 +312,6 @@
             document.getElementById('resultCard').style.display = 'none';
         }
 
-        // 切換個股模式
         function switchMode(mode) {
             currentMode = mode;
             const tabUp = document.getElementById('tabUp');
@@ -326,20 +346,19 @@
             }
         }
 
-        // 重置功能
         function resetForm() {
             if (currentMainTab === 'STOCK') {
                 document.getElementById('stockName').value = '';
                 document.getElementById('aLow').value = '';
                 document.getElementById('aHigh').value = '';
             } else {
+                document.getElementById('futName').value = '';
                 document.getElementById('futLow').value = '';
                 document.getElementById('futHigh').value = '';
             }
             document.getElementById('resultCard').style.display = 'none';
         }
 
-        // 期貨計算
         function generateFuturesResultHtml(futName, low, high, pointValue) {
             const range = high - low;
             const pointVal = parseFloat(pointValue);
@@ -361,29 +380,32 @@
                 </p>
 
                 <div class="section-title">1. 多頭回檔關鍵支撐區 (做多觀察區)</div>
-                <table>
-                    <thead><tr><th>回檔關卡</th><th>預估指數點位</th><th>點數拉回</th><th>1口預估浮虧金額</th></tr></thead>
-                    <tbody>
-                        <tr><td>38.2% 淺幅回檔</td><td><b>${b382}</b></td><td>-${(range * 0.382).toFixed(1)} 點</td><td>-NT$ ${((range * 0.382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>
-                        <tr class="highlight-fut"><td>50.0% 標準回檔</td><td><b>${b500}</b></td><td>-${(range * 0.5).toFixed(1)} 點</td><td>-NT$ ${((range * 0.5) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>
-                        <tr class="highlight-fut"><td>61.8% 強支撐黃金角</td><td><b>${b618}</b></td><td>-${(range * 0.618).toFixed(1)} 點</td><td>-NT$ ${((range * 0.618) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>回檔關卡</th><th>預估指數點位</th><th>點數拉回</th><th>1口預估浮虧金額</th></tr></thead>
+                        <tbody>
+                            <tr><td>38.2% 淺幅回檔</td><td><b>${b382}</b></td><td>-${(range * 0.382).toFixed(1)} 點</td><td>-NT$ ${((range * 0.382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>
+                            <tr class="highlight-fut"><td>50.0% 標準回檔</td><td><b>${b500}</b></td><td>-${(range * 0.5).toFixed(1)} 點</td><td>-NT$ ${((range * 0.5) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>
+                            <tr class="highlight-fut"><td>61.8% 強支撐黃金角</td><td><b>${b618}</b></td><td>-${(range * 0.618).toFixed(1)} 點</td><td>-NT$ ${((range * 0.618) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
 
                 <div class="section-title">2. C 波發動估算目標區 (假設於 0.618 止跌)</div>
-                <table>
-                    <thead><tr><th>擴展倍數</th><th>目標點位</th><th>預估獲利點數</th><th>1口預估獲利金額</th></tr></thead>
-                    <tbody>
-                        <tr class="highlight-fut"><td>1.000 (1:1滿足)</td><td><b>${c100}</b></td><td>+${(c100 - b618).toFixed(1)} 點</td><td>+NT$ ${((c100 - b618) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>
-                        <tr><td>1.382 (強勢擴展)</td><td><b>${c1382}</b></td><td>+${(c1382 - b618).toFixed(1)} 點</td><td>+NT$ ${((c1382 - b618) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>擴展倍數</th><th>目標點位</th><th>預估獲利點數</th><th>1口預估獲利金額</th></tr></thead>
+                        <tbody>
+                            <tr class="highlight-fut"><td>1.000 (1:1滿足)</td><td><b>${c100}</b></td><td>+${(c100 - b618).toFixed(1)} 點</td><td>+NT$ ${((c100 - b618) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>
+                            <tr><td>1.382 (強勢擴展)</td><td><b>${c1382}</b></td><td>+${(c1382 - b618).toFixed(1)} 點</td><td>+NT$ ${((c1382 - b618) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             `;
 
-            return { resultsHtml, bKey: `支撐:${b618}`, cKey: `目標:${c100}`, range: `${range}點` };
+            return { resultsHtml, bKey: `支撐:${b618}`, cKey: `目標:${c100}` };
         }
 
-        // 個股計算
         function generateResultHtml(mode, stockName, aLow, aHigh) {
             const wave1 = aHigh - aLow;
             const aPct = ((wave1 / aLow) * 100).toFixed(1);
@@ -403,24 +425,28 @@
                     </p>
 
                     <div class="section-title">2. B 波回檔預估支撐區</div>
-                    <table>
-                        <thead><tr><th>回檔比例</th><th>預估 B 波點位</th><th>說明</th></tr></thead>
-                        <tbody>
-                            <tr><td>38.2% (強勢)</td><td><b>${(aHigh - wave1*0.382).toFixed(2)}</b></td><td>淺幅修正，多頭強勁</td></tr>
-                            <tr class="highlight-up"><td>50.0% (中性)</td><td><b>${b500.toFixed(2)}</b></td><td>標準回檔中軸</td></tr>
-                            <tr class="highlight-up"><td>61.8% (黃金)</td><td><b>${b618.toFixed(2)}</b></td><td>關鍵強支撐區</td></tr>
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>回檔比例</th><th>預估 B 波點位</th><th>說明</th></tr></thead>
+                            <tbody>
+                                <tr><td>38.2% (強勢)</td><td><b>${(aHigh - wave1*0.382).toFixed(2)}</b></td><td>淺幅修正，多頭強勁</td></tr>
+                                <tr class="highlight-up"><td>50.0% (中性)</td><td><b>${b500.toFixed(2)}</b></td><td>標準回檔中軸</td></tr>
+                                <tr class="highlight-up"><td>61.8% (黃金)</td><td><b>${b618.toFixed(2)}</b></td><td>關鍵強支撐區</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
 
                     <div class="section-title">3. C 波目標價估算</div>
-                    <table>
-                        <thead><tr><th>擴展比例</th><th>假設 B 在 0.5</th><th>假設 B 在 0.618</th></tr></thead>
-                        <tbody>
-                            <tr class="highlight-up"><td>1.000 (1:1等長)</td><td><b>${(b500 + wave1).toFixed(2)}</b></td><td><b>${(b618 + wave1).toFixed(2)}</b></td></tr>
-                            <tr><td>1.382 (擴展)</td><td><b>${(b500 + wave1*1.382).toFixed(2)}</b></td><td><b>${(b618 + wave1*1.382).toFixed(2)}</b></td></tr>
-                            <tr><td>1.618 (強勢)</td><td><b>${(b500 + wave1*1.618).toFixed(2)}</b></td><td><b>${(b618 + wave1*1.618).toFixed(2)}</b></td></tr>
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>擴展比例</th><th>假設 B 在 0.5</th><th>假設 B 在 0.618</th></tr></thead>
+                            <tbody>
+                                <tr class="highlight-up"><td>1.000 (1:1等長)</td><td><b>${(b500 + wave1).toFixed(2)}</b></td><td><b>${(b618 + wave1).toFixed(2)}</b></td></tr>
+                                <tr><td>1.382 (擴展)</td><td><b>${(b500 + wave1*1.382).toFixed(2)}</b></td><td><b>${(b618 + wave1*1.382).toFixed(2)}</b></td></tr>
+                                <tr><td>1.618 (強勢)</td><td><b>${(b500 + wave1*1.618).toFixed(2)}</b></td><td><b>${(b618 + wave1*1.618).toFixed(2)}</b></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 `;
                 bKey = b618.toFixed(2);
                 cKey = c100.toFixed(2);
@@ -437,23 +463,27 @@
                     </p>
 
                     <div class="section-title">2. B 波反彈逃命壓力區</div>
-                    <table>
-                        <thead><tr><th>反彈比例</th><th>預估 B 波點位</th><th>說明</th></tr></thead>
-                        <tbody>
-                            <tr><td>38.2% (弱勢)</td><td><b>${(aLow + wave1*0.382).toFixed(2)}</b></td><td>反彈無力，空頭極強</td></tr>
-                            <tr class="highlight-down"><td>50.0% (中性)</td><td><b>${b500.toFixed(2)}</b></td><td>標準反彈壓力區</td></tr>
-                            <tr class="highlight-down"><td>61.8% (強勢)</td><td><b>${(aLow + wave1*0.618).toFixed(2)}</b></td><td>解套賣壓最重區</td></tr>
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>反彈比例</th><th>預估 B 波點位</th><th>說明</th></tr></thead>
+                            <tbody>
+                                <tr><td>38.2% (弱勢)</td><td><b>${(aLow + wave1*0.382).toFixed(2)}</b></td><td>反彈無力，空頭極強</td></tr>
+                                <tr class="highlight-down"><td>50.0% (中性)</td><td><b>${b500.toFixed(2)}</b></td><td>標準反彈壓力區</td></tr>
+                                <tr class="highlight-down"><td>61.8% (強勢)</td><td><b>${(aLow + wave1*0.618).toFixed(2)}</b></td><td>解套賣壓最重區</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
 
                     <div class="section-title">3. C 波殺盤目標低點</div>
-                    <table>
-                        <thead><tr><th>擴展比例</th><th>假設 B 彈到 0.382</th><th>假設 B 彈到 0.500</th></tr></thead>
-                        <tbody>
-                            <tr class="highlight-down"><td>1.000 (1:1滿足)</td><td><b>${(aLow + wave1*0.382 - wave1).toFixed(2)}</b></td><td><b>${(b500 - wave1).toFixed(2)}</b></td></tr>
-                            <tr><td>1.618 (主跌段)</td><td><b>${(aLow + wave1*0.382 - wave1*1.618).toFixed(2)}</b></td><td><b>${(b500 - wave1*1.618).toFixed(2)}</b></td></tr>
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table>
+                            <thead><tr><th>擴展比例</th><th>假設 B 彈到 0.382</th><th>假設 B 彈到 0.500</th></tr></thead>
+                            <tbody>
+                                <tr class="highlight-down"><td>1.000 (1:1滿足)</td><td><b>${(aLow + wave1*0.382 - wave1).toFixed(2)}</b></td><td><b>${(b500 - wave1).toFixed(2)}</b></td></tr>
+                                <tr><td>1.618 (主跌段)</td><td><b>${(aLow + wave1*0.382 - wave1*1.618).toFixed(2)}</b></td><td><b>${(b500 - wave1*1.618).toFixed(2)}</b></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 `;
                 bKey = b500.toFixed(2);
                 cKey = c100.toFixed(2);
@@ -473,55 +503,56 @@
                     </p>
 
                     <div class="section-title">🌊 完整 5 波推升推估軌跡 (標準黃金比例模型)</div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>波段</th>
-                                <th>關鍵比例算式</th>
-                                <th>預估點位</th>
-                                <th>波浪觀察重點</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><b>第 2 波 (拉回)</b></td>
-                                <td>1波回檔 61.8%</td>
-                                <td><b>${w2_618.toFixed(2)}</b></td>
-                                <td>絕對不可跌破 1 波起點 (${aLow})</td>
-                            </tr>
-                            <tr class="highlight-w5">
-                                <td><b>第 3 波 (主升段)</b></td>
-                                <td>2波低點 + 1.618倍 1波長</td>
-                                <td><b>${w3_1618.toFixed(2)}</b></td>
-                                <td>多頭最猛烈主升段 (若超強看 ${w3_2618.toFixed(2)})</td>
-                            </tr>
-                            <tr>
-                                <td><b>第 4 波 (修正)</b></td>
-                                <td>3波頂點回擋 38.2%</td>
-                                <td><b>${w4_382.toFixed(2)}</b></td>
-                                <td>原則上不應重疊 1 波頂點 (${aHigh})</td>
-                            </tr>
-                            <tr class="highlight-w5">
-                                <td><b>第 5 波 (末升段)</b></td>
-                                <td>4波低點 + 1:1 第1波長</td>
-                                <td><b>${w5_equal.toFixed(2)}</b></td>
-                                <td>末升段目標區，需防範高點爆量背離</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>波段</th>
+                                    <th>關鍵比例算式</th>
+                                    <th>預估點位</th>
+                                    <th>波浪觀察重點</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><b>第 2 波 (拉回)</b></td>
+                                    <td>1波回檔 61.8%</td>
+                                    <td><b>${w2_618.toFixed(2)}</b></td>
+                                    <td>絕對不可跌破 1 波起點 (${aLow})</td>
+                                </tr>
+                                <tr class="highlight-w5">
+                                    <td><b>第 3 波 (主升段)</b></td>
+                                    <td>2波低點 + 1.618倍 1波長</td>
+                                    <td><b>${w3_1618.toFixed(2)}</b></td>
+                                    <td>多頭最猛烈主升段 (若超強看 ${w3_2618.toFixed(2)})</td>
+                                </tr>
+                                <tr>
+                                    <td><b>第 4 波 (修正)</b></td>
+                                    <td>3波頂點回擋 38.2%</td>
+                                    <td><b>${w4_382.toFixed(2)}</b></td>
+                                    <td>原則上不應重疊 1 波頂點 (${aHigh})</td>
+                                </tr>
+                                <tr class="highlight-w5">
+                                    <td><b>第 5 波 (末升段)</b></td>
+                                    <td>4波低點 + 1:1 第1波長</td>
+                                    <td><b>${w5_equal.toFixed(2)}</b></td>
+                                    <td>末升段目標區，需防範高點爆量背離</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 `;
                 bKey = `W3:${w3_1618.toFixed(2)}`;
                 cKey = `W5:${w5_equal.toFixed(2)}`;
             }
 
-            return { resultsHtml, bKey, cKey, wave1: wave1.toFixed(2) };
+            return { resultsHtml, bKey, cKey };
         }
 
-        // 計算與儲存紀錄
         function calculate() {
             if (currentMainTab === 'STOCK') {
                 const nameInput = document.getElementById('stockName').value.trim();
-                const stockName = nameInput || "未命名股票";
+                const stockName = nameInput || "自訂股票";
                 const aLow = parseFloat(document.getElementById('aLow').value);
                 const aHigh = parseFloat(document.getElementById('aHigh').value);
 
@@ -546,7 +577,8 @@
                 });
 
             } else {
-                const futName = document.getElementById('futName').value.trim() || "台指期";
+                const nameInput = document.getElementById('futName').value.trim();
+                const futName = nameInput || "台指期";
                 const pointVal = document.getElementById('futContract').value;
                 const futLow = parseFloat(document.getElementById('futLow').value);
                 const futHigh = parseFloat(document.getElementById('futHigh').value);
@@ -575,16 +607,25 @@
         }
 
         function saveToHistory(record) {
-            let history = JSON.parse(localStorage.getItem('abc_history')) || [];
-            history.unshift(record);
-            if (history.length > 30) history.pop();
-            localStorage.setItem('abc_history', JSON.stringify(history));
-            renderHistory();
+            try {
+                let history = JSON.parse(localStorage.getItem('abc_history')) || [];
+                history.unshift(record);
+                if (history.length > 30) history.pop();
+                localStorage.setItem('abc_history', JSON.stringify(history));
+                renderHistory();
+            } catch (e) {
+                console.warn("無法存取 localStorage:", e);
+            }
         }
 
         function renderHistory() {
             const historyList = document.getElementById('historyList');
-            let history = JSON.parse(localStorage.getItem('abc_history')) || [];
+            let history = [];
+            try {
+                history = JSON.parse(localStorage.getItem('abc_history')) || [];
+            } catch (e) {
+                history = [];
+            }
 
             if (history.length === 0) {
                 historyList.innerHTML = '<div class="empty-tip">尚無歷史紀錄</div>';
@@ -615,7 +656,7 @@
                         <span class="delete-item-btn" onclick="deleteHistoryItem(event, ${index})">✕</span>
                         <div class="history-title">
                             <span>${item.stockName} ${tagHtml}</span>
-                            <span style="font-size: 11px; color: #a0aec0;">${item.time}</span>
+                            <span style="font-size: 0.75rem; color: #a0aec0;">${item.time}</span>
                         </div>
                         <div class="history-detail">
                             ${detailText}
@@ -627,44 +668,57 @@
         }
 
         function loadHistoryItem(index) {
-            let history = JSON.parse(localStorage.getItem('abc_history')) || [];
-            const item = history[index];
-            if (item) {
-                if (item.mainTab === 'FUTURES' || item.mode === 'FUTURES') {
-                    switchMainTab('FUTURES');
-                    document.getElementById('futLow').value = item.aLow;
-                    document.getElementById('futHigh').value = item.aHigh;
-                    if(item.pointVal) document.getElementById('futContract').value = item.pointVal;
+            try {
+                let history = JSON.parse(localStorage.getItem('abc_history')) || [];
+                const item = history[index];
+                if (item) {
+                    if (item.mainTab === 'FUTURES' || item.mode === 'FUTURES') {
+                        switchMainTab('FUTURES');
+                        document.getElementById('futLow').value = item.aLow;
+                        document.getElementById('futHigh').value = item.aHigh;
+                        if(item.pointVal) document.getElementById('futContract').value = item.pointVal;
 
-                    const cleanName = item.stockName.split(' (')[0] || "台指期";
-                    const res = generateFuturesResultHtml(cleanName, item.aLow, item.aHigh, item.pointVal || '200');
-                    document.getElementById('dynamicResults').innerHTML = res.resultsHtml;
-                } else {
-                    switchMainTab('STOCK');
-                    switchMode(item.mode || 'UP');
-                    document.getElementById('stockName').value = item.stockName;
-                    document.getElementById('aLow').value = item.aLow;
-                    document.getElementById('aHigh').value = item.aHigh;
+                        const cleanName = item.stockName.split(' (')[0] || "台指期";
+                        document.getElementById('futName').value = cleanName;
+                        const res = generateFuturesResultHtml(cleanName, item.aLow, item.aHigh, item.pointVal || '200');
+                        document.getElementById('dynamicResults').innerHTML = res.resultsHtml;
+                    } else {
+                        switchMainTab('STOCK');
+                        switchMode(item.mode || 'UP');
+                        document.getElementById('stockName').value = item.stockName;
+                        document.getElementById('aLow').value = item.aLow;
+                        document.getElementById('aHigh').value = item.aHigh;
 
-                    const res = generateResultHtml(item.mode, item.stockName, parseFloat(item.aLow), parseFloat(item.aHigh));
-                    document.getElementById('dynamicResults').innerHTML = res.resultsHtml;
+                        const res = generateResultHtml(item.mode, item.stockName, parseFloat(item.aLow), parseFloat(item.aHigh));
+                        document.getElementById('dynamicResults').innerHTML = res.resultsHtml;
+                    }
+                    document.getElementById('resultCard').style.display = 'block';
                 }
-                document.getElementById('resultCard').style.display = 'block';
+            } catch (e) {
+                console.error(e);
             }
         }
 
         function deleteHistoryItem(event, index) {
             event.stopPropagation();
-            let history = JSON.parse(localStorage.getItem('abc_history')) || [];
-            history.splice(index, 1);
-            localStorage.setItem('abc_history', JSON.stringify(history));
-            renderHistory();
+            try {
+                let history = JSON.parse(localStorage.getItem('abc_history')) || [];
+                history.splice(index, 1);
+                localStorage.setItem('abc_history', JSON.stringify(history));
+                renderHistory();
+            } catch (e) {
+                console.error(e);
+            }
         }
 
         function clearHistory() {
             if (confirm("確定要清空所有歷史紀錄嗎？")) {
-                localStorage.removeItem('abc_history');
-                renderHistory();
+                try {
+                    localStorage.removeItem('abc_history');
+                    renderHistory();
+                } catch (e) {
+                    console.error(e);
+                }
             }
         }
     </script>
