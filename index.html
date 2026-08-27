@@ -495,6 +495,8 @@
                 const effectiveW2 = isRealW2 ? actualW2Low : w2_618;
 
                 // 第 3 波多重倍率計算 (以 effectiveW2 為起算基點)
+                const w3_1000 = effectiveW2 + (wave1 * 1.000);
+                const w3_1382 = effectiveW2 + (wave1 * 1.382);
                 const w3_1618 = effectiveW2 + (wave1 * 1.618);
                 const w3_2000 = effectiveW2 + (wave1 * 2.000);
                 const w3_2618 = effectiveW2 + (wave1 * 2.618);
@@ -578,9 +580,21 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                <tr>
+                                    <td>1.000 倍 (基本)</td>
+                                    <td>基本主升段目標</td>
+                                    <td><b>${w3_1000.toFixed(1)}</b></td>
+                                    <td>+${(w3_1000 - effectiveW2).toFixed(1)} 點 (+NT$ ${((w3_1000 - effectiveW2) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                </tr>
+                                <tr>
+                                    <td>1.382 倍 (標準)</td>
+                                    <td>標準主升段目標</td>
+                                    <td><b>${w3_1382.toFixed(1)}</b></td>
+                                    <td>+${(w3_1382 - effectiveW2).toFixed(1)} 點 (+NT$ ${((w3_1382 - effectiveW2) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                </tr>
                                 <tr class="highlight-w5">
-                                    <td><b>1.618 倍 (標準)</b></td>
-                                    <td><b>標準主升段目標</b></td>
+                                    <td><b>1.618 倍 (最標準)</b></td>
+                                    <td><b>最標準主升段目標</b></td>
                                     <td><b>${w3_1618.toFixed(1)}</b></td>
                                     <td>+${(w3_1618 - effectiveW2).toFixed(1)} 點 (+NT$ ${((w3_1618 - effectiveW2) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
                                 </tr>
