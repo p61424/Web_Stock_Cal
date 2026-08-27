@@ -7,7 +7,7 @@
     <style>
         * { box-sizing: border-box; }
         
-        /* 根目錄動態基準字級：隨螢幕寬度自動平滑縮放 */
+        /* 根目錄動態基準字級 */
         html {
             font-size: clamp(14px, 1.1vw, 18px);
         }
@@ -59,7 +59,7 @@
         .delete-item-btn { position: absolute; right: 10px; top: 10px; color: #a0aec0; font-size: 0.9rem; font-weight: bold; cursor: pointer; }
         .delete-item-btn:hover { color: #e53e3e; }
         
-        /* 右側主內容：動態邊距 */
+        /* 右側主內容 */
         .main-content { 
             flex: 1; 
             overflow-y: auto; 
@@ -67,7 +67,6 @@
         }
         .container { max-width: 900px; margin: 0 auto; width: 100%; }
         
-        /* 卡片容器：縮放動態 Padding */
         .card { 
             background: white; 
             padding: clamp(16px, 2.5vw, 28px); 
@@ -97,10 +96,10 @@
         .tab-btn.active-down { background: #f0fff4; border-color: #38a169; color: #276749; }
         .tab-btn.active-w5 { background: #fffaf0; border-color: #dd6b20; color: #c05621; }
 
-        /* 自適應平滑網格系統 */
+        /* 平滑網格系統 */
         .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: clamp(8px, 1.5vw, 16px); margin-bottom: 20px; }
         
-        /* 期貨專用：設定兩列 layout */
+        /* 期貨 Layout */
         .futures-grid-container {
             display: flex;
             flex-direction: column;
@@ -132,7 +131,7 @@
 
         .section-title { font-weight: bold; font-size: clamp(0.95rem, 1.2vw, 1.1rem); margin-top: 15px; margin-bottom: 10px; color: #2d3748; }
         
-        /* 表格自動適應與縮放 */
+        /* 表格自動適應 */
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { width: 100%; border-collapse: collapse; margin-top: 8px; min-width: 320px; }
         th, td { border: 1px solid #e2e8f0; padding: clamp(6px, 1vw, 10px); text-align: center; font-size: clamp(0.8rem, 1vw, 0.95rem); }
@@ -148,7 +147,31 @@
         .tag-w5 { background: #fbd38d; color: #7b341e; }
         .tag-fut { background: #bee3f8; color: #2b6cb0; }
 
-        /* 行動裝置/極小視窗轉換直向 */
+        /* 第 2 波更新動態卡片 */
+        .update-w2-box {
+            background: #fffaf0;
+            border: 2px dashed #dd6b20;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        .update-w2-title {
+            font-weight: bold;
+            color: #c05621;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .update-w2-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* 行動裝置適應 */
         @media (max-width: 768px) {
             body { flex-direction: column; overflow-y: auto; }
             .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #2d3748; max-height: 180px; flex-shrink: 0; }
@@ -158,6 +181,7 @@
         
         @media (max-width: 480px) {
             .futures-row { grid-template-columns: 1fr; }
+            .update-w2-row { flex-direction: column; }
         }
     </style>
 </head>
@@ -195,7 +219,7 @@
                     <div class="main-page-tab" id="tabFutures" onclick="switchMainTab('FUTURES')">⚡ 台指期貨</div>
                 </div>
                 
-                <!-- 模式選擇 (上漲ABC / 下跌ABC / 5波推升) -->
+                <!-- 模式選擇 -->
                 <div class="tab-group">
                     <div class="tab-btn active-up" id="tabUp" onclick="switchMode('UP')">🚀 上漲 ABC</div>
                     <div class="tab-btn" id="tabDown" onclick="switchMode('DOWN')">📉 下跌 ABC</div>
@@ -220,7 +244,7 @@
                     </div>
                 </div>
 
-                <!-- 【期貨視圖】(高低點已整合成同一行) -->
+                <!-- 【期貨視圖】(高低點在同一行) -->
                 <div id="futuresView" style="display: none;">
                     <div class="futures-grid-container">
                         <!-- 第一行：基本資訊 -->
@@ -238,7 +262,7 @@
                                 </select>
                             </div>
                         </div>
-                        <!-- 第二行：指數點位 (高點與低點放在同一行) -->
+                        <!-- 第二行：高低點點位(同一行) -->
                         <div class="futures-row">
                             <div class="form-group">
                                 <label id="lblFutLow">A 波起漲點 (指數點位)</label>
@@ -288,6 +312,7 @@
                 document.getElementById('fsLg').classList.add('active');
             } else {
                 document.body.classList.add('font-md');
+                document.getElementById('fsMd').classList.active = true;
                 document.getElementById('fsMd').classList.add('active');
             }
         }
@@ -372,8 +397,8 @@
             document.getElementById('resultCard').style.display = 'none';
         }
 
-        /* 核心計算：台指期貨（含點數與金額損益） */
-        function generateFuturesResultHtml(mode, futName, low, high, pointValue) {
+        /* 核心計算：台指期貨（多重倍率多波段擴充） */
+        function generateFuturesResultHtml(mode, futName, low, high, pointValue, actualW2Low = null) {
             const pointVal = parseFloat(pointValue);
             let resultsHtml = "";
             let bKey = "", cKey = "";
@@ -459,64 +484,230 @@
                 cKey = `目標:${c100.toFixed(1)}`;
 
             } else if (mode === 'WAVE5') {
-                const wave1 = high - low;
+                const wave1 = high - low; // 第 1 波幅度
+                
+                // 若無實際 W2 低點，預設採用標準黃金分割 61.8% 進行基礎算牌
+                const w2_382 = high - (wave1 * 0.382);
+                const w2_500 = high - (wave1 * 0.500);
                 const w2_618 = high - (wave1 * 0.618);
-                const w3_1618 = w2_618 + (wave1 * 1.618);
-                const w4_382 = w3_1618 - ((w3_1618 - w2_618) * 0.382);
-                const w5_equal = w4_382 + wave1;
+                
+                const isRealW2 = (actualW2Low !== null && !isNaN(actualW2Low));
+                const effectiveW2 = isRealW2 ? actualW2Low : w2_618;
+
+                // 第 3 波多重倍率計算 (以 effectiveW2 為起算基點)
+                const w3_1618 = effectiveW2 + (wave1 * 1.618);
+                const w3_2000 = effectiveW2 + (wave1 * 2.000);
+                const w3_2618 = effectiveW2 + (wave1 * 2.618);
+
+                // 第 4 波多重倍率計算 (以標準第 3 波 W3_1.618 為頂點回擋基準)
+                const w3_len = w3_1618 - effectiveW2;
+                const w4_236 = w3_1618 - (w3_len * 0.236);
+                const w4_382 = w3_1618 - (w3_len * 0.382);
+                const w4_500 = w3_1618 - (w3_len * 0.500);
+
+                // 第 5 波多重倍率計算 (以標準 4 波 W4_0.382 為底點推升基準)
+                const w5_0618 = w4_382 + (wave1 * 0.618);
+                const w5_1000 = w4_382 + (wave1 * 1.000);
+                const w5_1618 = w4_382 + (wave1 * 1.618);
+
+                const statusTag = isRealW2 
+                    ? `<span style="color:#e53e3e; font-weight:bold;">[已依實際 2波低點 ${effectiveW2} 精準算牌]</span>` 
+                    : `<span style="color:#718096;">[未輸入 2波低點，預設 61.8% 預測]</span>`;
 
                 resultsHtml = `
-                    <div class="section-title">🔥 【${futName}】 1~5 波推升全波段點位與價值推算</div>
-                    <p style="margin: 5px 0 15px 0; line-height: 1.6;">
+                    <div class="section-title">🔥 【${futName}】 1~5 波推升各波常見倍率完整點位表 ${statusTag}</div>
+                    <p style="margin: 5px 0 10px 0; line-height: 1.6;">
                         1 波起漲點：<b>${low}</b> | 1 波頂點：<b>${high}</b><br>
-                        1 波波段點數：<b>${wave1.toFixed(1)} 點</b> (1口相當於: <b style="color:#dd6b20;">NT$ ${(wave1 * pointVal).toLocaleString()} 元</b>)
+                        1 波幅長：<b>${wave1.toFixed(1)} 點</b> (1口點數價值: <b style="color:#dd6b20;">NT$ ${(wave1 * pointVal).toLocaleString()} 元</b>)
                     </p>
 
-                    <div class="section-title">🌊 完整 5 波推升軌跡點位與 1 口波段獲利推算</div>
+                    <!-- 動態更新第 2 波低點模組 -->
+                    <div class="update-w2-box">
+                        <div class="update-w2-title">🎯 盤面進展：輸入「實際 2 波低點」同步更新 3~5 波多倍率數據</div>
+                        <div class="update-w2-row">
+                            <input type="number" id="actualW2Input" placeholder="請輸入實際 2 波低點 (例: ${w2_618.toFixed(0)})" value="${isRealW2 ? actualW2Low : ''}">
+                            <button onclick="updateFuturesW2(${low}, ${high}, ${pointVal}, '${futName}')" style="background:#dd6b20; color:white; border:none; padding:8px 15px; border-radius:6px; font-weight:bold; cursor:pointer; white-space:nowrap;">套用並更新</button>
+                        </div>
+                    </div>
+
+                    <!-- 第 2 波多倍率表格 -->
+                    <div class="section-title">📉 第 2 波拉回 (Wave 2) 各常見比例支撐價</div>
                     <div class="table-responsive">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>波段</th>
-                                    <th>關鍵算式</th>
+                                    <th>回檔比例</th>
+                                    <th>狀態與說明</th>
                                     <th>預估指數點位</th>
-                                    <th>1口對應點數價值</th>
+                                    <th>1口拉回浮虧點數/金額</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><b>第 2 波 (拉回)</b></td>
-                                    <td>1波回檔 61.8%</td>
-                                    <td><b>${w2_618.toFixed(1)}</b></td>
-                                    <td>-NT$ ${((wave1 * 0.618) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})}</td>
-                                </tr>
-                                <tr class="highlight-w5">
-                                    <td><b>第 3 波 (主升段)</b></td>
-                                    <td>2波低點 + 1.618倍1波長</td>
-                                    <td><b>${w3_1618.toFixed(1)}</b></td>
-                                    <td>+NT$ ${((w3_1618 - w2_618) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})} (主升段)</td>
+                                    <td>38.2%</td>
+                                    <td>淺幅修正 (強勢行情)</td>
+                                    <td><b>${w2_382.toFixed(1)}</b></td>
+                                    <td>-${(high - w2_382).toFixed(1)} 點 (-NT$ ${((high - w2_382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
                                 </tr>
                                 <tr>
-                                    <td><b>第 4 波 (修正)</b></td>
-                                    <td>3波頂點回擋 38.2%</td>
-                                    <td><b>${w4_382.toFixed(1)}</b></td>
-                                    <td>-NT$ ${((w3_1618 - w4_382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})}</td>
+                                    <td>50.0%</td>
+                                    <td>中性回檔線</td>
+                                    <td><b>${w2_500.toFixed(1)}</b></td>
+                                    <td>-${(high - w2_500).toFixed(1)} 點 (-NT$ ${((high - w2_500) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
                                 </tr>
                                 <tr class="highlight-w5">
-                                    <td><b>第 5 波 (末升段)</b></td>
-                                    <td>4波低點 + 1:1第1波長</td>
-                                    <td><b>${w5_equal.toFixed(1)}</b></td>
-                                    <td>+NT$ ${((w5_equal - w4_382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})} (末升段)</td>
+                                    <td><b>61.8% (預設)</b></td>
+                                    <td><b>${isRealW2 ? '★ 實際輸入低點基準' : '黃金比例回檔角 (預設算牌點)'}</b></td>
+                                    <td><b>${effectiveW2.toFixed(1)}</b></td>
+                                    <td>-${(high - effectiveW2).toFixed(1)} 點 (-NT$ ${((high - effectiveW2) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 第 3 波多倍率表格 -->
+                    <div class="section-title">🚀 第 3 波主升段 (Wave 3) 各常見倍率目標價 (以 2波低點 ${effectiveW2.toFixed(1)} 算起)</div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>推升倍率</th>
+                                    <th>狀態與說明</th>
+                                    <th>預估指數目標點位</th>
+                                    <th>1口主升段獲利點數/金額</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="highlight-w5">
+                                    <td><b>1.618 倍 (標準)</b></td>
+                                    <td><b>標準主升段目標</b></td>
+                                    <td><b>${w3_1618.toFixed(1)}</b></td>
+                                    <td>+${(w3_1618 - effectiveW2).toFixed(1)} 點 (+NT$ ${((w3_1618 - effectiveW2) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                </tr>
+                                <tr>
+                                    <td>2.000 倍</td>
+                                    <td>強勢主升段擴展</td>
+                                    <td><b>${w3_2000.toFixed(1)}</b></td>
+                                    <td>+${(w3_2000 - effectiveW2).toFixed(1)} 點 (+NT$ ${((w3_2000 - effectiveW2) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                </tr>
+                                <tr>
+                                    <td>2.618 倍</td>
+                                    <td>超強噴出延伸段</td>
+                                    <td><b>${w3_2618.toFixed(1)}</b></td>
+                                    <td>+${(w3_2618 - effectiveW2).toFixed(1)} 點 (+NT$ ${((w3_2618 - effectiveW2) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 第 4 波多倍率表格 -->
+                    <div class="section-title">📉 第 4 波修正 (Wave 4) 各常見比例支撐價 (假設 W3 頂點為 ${w3_1618.toFixed(1)})</div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>修正比例 (佔 3 波幅)</th>
+                                    <th>狀態與說明</th>
+                                    <th>預估指數點位</th>
+                                    <th>1口修正拉回點數/金額</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>23.6%</td>
+                                    <td>極淺修正 (超強勢)</td>
+                                    <td><b>${w4_236.toFixed(1)}</b></td>
+                                    <td>-${(w3_1618 - w4_236).toFixed(1)} 點 (-NT$ ${((w3_1618 - w4_236) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                </tr>
+                                <tr class="highlight-w5">
+                                    <td><b>38.2% (標準)</b></td>
+                                    <td><b>標準 4 波拉回 (不重疊 1 波頂點)</b></td>
+                                    <td><b>${w4_382.toFixed(1)}</b></td>
+                                    <td>-${(w3_1618 - w4_382).toFixed(1)} 點 (-NT$ ${((w3_1618 - w4_382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                </tr>
+                                <tr>
+                                    <td>50.0%</td>
+                                    <td>較深回檔 (注意防守 1波頂 ${high})</td>
+                                    <td><b>${w4_500.toFixed(1)}</b></td>
+                                    <td>-${(w3_1618 - w4_500).toFixed(1)} 點 (-NT$ ${((w3_1618 - w4_500) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 第 5 波多倍率表格 -->
+                    <div class="section-title">🚀 第 5 波末升段 (Wave 5) 各常見倍率目標價 (以 4波低點 ${w4_382.toFixed(1)} 算起)</div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>推升倍率 (佔 1 波幅)</th>
+                                    <th>狀態與說明</th>
+                                    <th>預估指數目標點位</th>
+                                    <th>1口末升段獲利點數/金額</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>0.618 倍</td>
+                                    <td>弱勢末升段 / 失敗波防範區</td>
+                                    <td><b>${w5_0618.toFixed(1)}</b></td>
+                                    <td>+${(w5_0618 - w4_382).toFixed(1)} 點 (+NT$ ${((w5_0618 - w4_382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                </tr>
+                                <tr class="highlight-w5">
+                                    <td><b>1.000 倍 (1:1等長)</b></td>
+                                    <td><b>標準末升段目標</b></td>
+                                    <td><b>${w5_1000.toFixed(1)}</b></td>
+                                    <td>+${(w5_1000 - w4_382).toFixed(1)} 點 (+NT$ ${((w5_1000 - w4_382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                </tr>
+                                <tr>
+                                    <td>1.618 倍</td>
+                                    <td>第 5 波噴出延伸段</td>
+                                    <td><b>${w5_1618.toFixed(1)}</b></td>
+                                    <td>+${(w5_1618 - w4_382).toFixed(1)} 點 (+NT$ ${((w5_1618 - w4_382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 `;
-                bKey = `W3:${w3_1618.toFixed(1)}`;
-                cKey = `W5:${w5_equal.toFixed(1)}`;
+                bKey = `W2:${effectiveW2.toFixed(1)}`;
+                cKey = `W3:${w3_1618.toFixed(1)}`;
             }
 
             return { resultsHtml, bKey, cKey };
+        }
+
+        /* 觸發更新 2 波低點函數 */
+        function updateFuturesW2(low, high, pointVal, futName) {
+            const val = parseFloat(document.getElementById('actualW2Input').value);
+            if (isNaN(val)) {
+                alert("請輸入正確的第 2 波低點指數！");
+                return;
+            }
+            if (val <= low) {
+                alert("第 2 波低點不得低於第 1 波起漲點 (" + low + ")，否則波浪理論不成立！");
+                return;
+            }
+            if (val >= high) {
+                alert("第 2 波低點必須低於第 1 波頂點 (" + high + ")！");
+                return;
+            }
+
+            const res = generateFuturesResultHtml('WAVE5', futName, low, high, pointVal, val);
+            document.getElementById('dynamicResults').innerHTML = res.resultsHtml;
+
+            // 更新歷史紀錄中的 W2/W3 點位
+            saveToHistory({
+                mainTab: 'FUTURES',
+                mode: 'WAVE5',
+                stockName: `${futName} (${pointVal==200?'大台':pointVal==50?'小台':'微台'})`,
+                aLow: low,
+                aHigh: high,
+                pointVal: pointVal,
+                bKey: res.bKey,
+                cKey: res.cKey,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
         }
 
         /* 核心計算：台股個股 */
