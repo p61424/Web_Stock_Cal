@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台股個股 & 台指期貨 波浪理論算牌器</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; background: #f4f6f8; color: #333; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* 動態字級控制類別 */
+        body.font-sm .main-content { font-size: 13px; }
+        body.font-md .main-content { font-size: 15px; }
+        body.font-lg .main-content { font-size: 18px; }
+
+        /* 左側歷史紀錄欄 */
+        .sidebar { width: 320px; background: #1a202c; color: white; display: flex; flex-direction: column; border-right: 1px solid #2d3748; flex-shrink: 0; }
+        .sidebar-header { padding: 20px; border-bottom: 1px solid #2d3748; display: flex; justify-content: space-between; align-items: center; }
+        .sidebar-header h3 { margin: 0; font-size: 16px; color: #e2e8f0; }
+        .clear-btn { background: #718096; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; }
+        .clear-btn:hover { background: #4a5568; }
+        .history-list { flex: 1; overflow-y: auto; padding: 10px; }
+        .history-item { background: #2d3748; padding: 12px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; position: relative; border-left: 4px solid #718096; }
+        .history-item.up { border-left-color: #e53e3e; }
+        .history-item.down { border-left-color: #38a169; }
+        .history-item.wave5 { border-left-color: #dd6b20; }
+        .history-item.futures { border-left-color: #3182ce; }
+        .history-item:hover { background: #4a5568; }
+        .history-title { font-weight: bold; font-size: 15px; color: #e2e8f0; display: flex; justify-content: space-between; margin-bottom: 4px; padding-right: 20px; }
+        .history-detail { font-size: 12px; color: #cbd5e0; line-height: 1.4; }
+        .delete-item-btn { position: absolute; right: 10px; top: 10px; color: #a0aec0; font-size: 14px; font-weight: bold; cursor: pointer; }
+        .delete-item-btn:hover { color: #e53e3e; }
+        
+        /* 右側主內容 */
+        .main-content { flex: 1; overflow-y: auto; padding: 30px; }
+        .container { max-width: 860px; margin: 0 auto; }
+        .card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        
+        .header-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 20px; }
+        .header-bar h2 { margin: 0; color: #1a202c; border: none; padding: 0; font-size: 1.5em; }
+        
+        /* 第一層主分頁切換 (個股 vs 期貨) */
+        .main-page-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 3px solid #e2e8f0; padding-bottom: 2px; }
+        .main-page-tab { flex: 1; text-align: center; padding: 12px; font-weight: bold; font-size: 1.1em; cursor: pointer; color: #718096; border-bottom: 4px solid transparent; transition: 0.2s; }
+        .main-page-tab.active { color: #2b6cb0; border-bottom-color: #3182ce; background: #ebf8ff; border-radius: 8px 8px 0 0; }
+
+        /* 字級調整按鈕 */
+        .font-size-controls { display: flex; gap: 4px; align-items: center; background: #edf2f7; padding: 4px; border-radius: 6px; }
+        .font-size-controls label { font-size: 12px; color: #718096; margin: 0 4px; font-weight: bold; }
+        .fs-btn { border: none; background: transparent; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; color: #4a5568; }
+        .fs-btn.active { background: white; color: #2b6cb0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+        /* 第二層模式切換 */
+        .tab-group { display: flex; gap: 8px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 10px 4px; font-size: 0.95em; font-weight: bold; border: 2px solid #cbd5e0; background: #edf2f7; color: #4a5568; border-radius: 8px; cursor: pointer; transition: 0.2s; text-align: center; }
+        .tab-btn.active-up { background: #fff5f5; border-color: #e53e3e; color: #c53030; }
+        .tab-btn.active-down { background: #f0fff4; border-color: #38a169; color: #276749; }
+        .tab-btn.active-w5 { background: #fffaf0; border-color: #dd6b20; color: #c05621; }
+        .tab-btn.active-fut { background: #ebf8ff; border-color: #3182ce; color: #2b6cb0; }
+
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        label { font-weight: bold; margin-bottom: 6px; font-size: 0.9em; color: #4a5568; }
+        input, select { padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 1em; background: white; }
+        
+        /* 按鈕區組合 */
+        .btn-group { display: flex; gap: 10px; }
+        button.calc-btn { flex: 3; color: white; padding: 12px; border: none; border-radius: 6px; font-size: 1.05em; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button.calc-btn.up-bg { background: #e53e3e; }
+        button.calc-btn.up-bg:hover { background: #c53030; }
+        button.calc-btn.down-bg { background: #38a169; }
+        button.calc-btn.down-bg:hover { background: #2f855a; }
+        button.calc-btn.w5-bg { background: #dd6b20; }
+        button.calc-btn.w5-bg:hover { background: #c05621; }
+        button.calc-btn.fut-bg { background: #3182ce; }
+        button.calc-btn.fut-bg:hover { background: #2b6cb0; }
+        
+        /* 重置按鈕 */
+        button.reset-btn { flex: 1; background: #edf2f7; color: #4a5568; border: 1px solid #cbd5e0; padding: 12px; border-radius: 6px; font-size: 1.05em; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button.reset-btn:hover { background: #e2e8f0; color: #1a202c; }
+
+        .section-title { font-weight: bold; font-size: 1.05em; margin-top: 15px; margin-bottom: 10px; color: #2d3748; }
+        table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+        th, td { border: 1px solid #e2e8f0; padding: 10px; text-align: center; font-size: 0.95em; }
+        th { background: #edf2f7; }
+        .highlight-up { font-weight: bold; color: #e53e3e; background: #fff5f5; }
+        .highlight-down { font-weight: bold; color: #38a169; background: #f0fff4; }
+        .highlight-w5 { font-weight: bold; color: #dd6b20; background: #fffaf0; }
+        .highlight-fut { font-weight: bold; color: #2b6cb0; background: #ebf8ff; }
+        .empty-tip { text-align: center; color: #a0aec0; padding: 20px; font-size: 14px; }
+        .tag { font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 4px; }
+        .tag-up { background: #feb2b2; color: #9b2c2c; }
+        .tag-down { background: #9ae6b4; color: #22543d; }
+        .tag-w5 { background: #fbd38d; color: #7b341e; }
+        .tag-fut { background: #bee3f8; color: #2b6cb0; }
+
+        /* 行動裝置響應式 RWD 適應 */
+        @media (max-width: 768px) {
+            body { flex-direction: column; overflow: auto; height: auto; }
+            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #2d3748; max-height: 200px; }
+            .main-content { padding: 15px; }
+            .grid-3, .grid-4 { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 左側歷史紀錄欄 -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3>📜 歷史計算紀錄</h3>
+            <button class="clear-btn" onclick="clearHistory()">清空</button>
+        </div>
+        <div class="history-list" id="historyList">
+            <div class="empty-tip">尚無歷史紀錄</div>
+        </div>
+    </div>
+
+    <!-- 右側主內容 -->
+    <div class="main-content">
+        <div class="container">
+            <div class="card">
+                <div class="header-bar">
+                    <h2>📈📉 波浪理論算牌器</h2>
+                    <!-- 字級調整 -->
+                    <div class="font-size-controls">
+                        <label>文字:</label>
+                        <button class="fs-btn" id="fsSm" onclick="setFontSize('sm')">小</button>
+                        <button class="fs-btn" id="fsMd" onclick="setFontSize('md')">中</button>
+                        <button class="fs-btn" id="fsLg" onclick="setFontSize('lg')">大</button>
+                    </div>
+                </div>
+
+                <!-- 第一層分頁：個股 vs 期貨 -->
+                <div class="main-page-tabs">
+                    <div class="main-page-tab active" id="tabStock" onclick="switchMainTab('STOCK')">📈 台股個股</div>
+                    <div class="main-page-tab" id="tabFutures" onclick="switchMainTab('FUTURES')">⚡ 台指期貨</div>
+                </div>
+                
+                <!-- 【個股視圖】 -->
+                <div id="stockView">
+                    <div class="tab-group">
+                        <div class="tab-btn active-up" id="tabUp" onclick="switchMode('UP')">🚀 上漲 ABC</div>
+                        <div class="tab-btn" id="tabDown" onclick="switchMode('DOWN')">📉 下跌 ABC</div>
+                        <div class="tab-btn" id="tabW5" onclick="switchMode('WAVE5')">🔥 上漲 5 波推升</div>
+                    </div>
+
+                    <div class="grid-3">
+                        <div class="form-group">
+                            <label>股號 / 名稱 (可搜尋)</label>
+                            <input type="text" id="stockName" list="stockOptions" placeholder="輸入代號或名稱...">
+                            <datalist id="stockOptions">
+                                <option value="2330 台積電"></option>
+                                <option value="2317 鴻海"></option>
+                                <option value="2454 聯發科"></option>
+                                <option value="2308 台達電"></option>
+                                <option value="2382 廣達"></option>
+                                <option value="3231 緯創"></option>
+                                <option value="3019 亞光"></option>
+                                <option value="2377 微星"></option>
+                                <option value="2393 億光"></option>
+                                <option value="0050 元大台灣50"></option>
+                                <option value="006208 富邦台50"></option>
+                            </datalist>
+                        </div>
+                        <div class="form-group">
+                            <label id="lblLow">A 波低點 (A Low)</label>
+                            <input type="number" id="aLow" placeholder="例: 100" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label id="lblHigh">A 波頂點 (A High)</label>
+                            <input type="number" id="aHigh" placeholder="例: 130" step="0.1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 【期貨視圖】 -->
+                <div id="futuresView" style="display: none;">
+                    <div class="grid-4">
+                        <div class="form-group">
+                            <label>台指期標的</label>
+                            <input type="text" id="futName" value="台指期 (TX)" placeholder="例如: 台指期全時段">
+                        </div>
+                        <div class="form-group">
+                            <label>合約規格 (每點價值)</label>
+                            <select id="futContract">
+                                <option value="200">大台 (點數 x 200元)</option>
+                                <option value="50">小台 (點數 x 50元)</option>
+                                <option value="10">微台 (點數 x 10元)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>波段起點 (基準低點)</label>
+                            <input type="number" id="futLow" placeholder="例: 22000" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label>波段高點 (基準高點)</label>
+                            <input type="number" id="futHigh" placeholder="例: 22500" step="1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 按鈕區：計算 + 重置 -->
+                <div class="btn-group">
+                    <button class="calc-btn up-bg" id="btnCalc" onclick="calculate()">計算並儲存紀錄</button>
+                    <button class="reset-btn" onclick="resetForm()">🔄 重置</button>
+                </div>
+            </div>
+
+            <!-- 計算結果顯示區 -->
+            <div class="card" id="resultCard" style="display: none;">
+                <div id="dynamicResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMainTab = 'STOCK'; // STOCK, FUTURES
+        let currentMode = 'UP'; // UP, DOWN, WAVE5
+        let userSetFontSize = false; // 紀錄使用者是否手動切換過字體
+
+        window.onload = function() {
+            autoAdjustFontSize();
+            renderHistory();
+        };
+
+        // 監聽螢幕縮放時，若使用者未手動設定過則動態調整大小
+        window.onresize = function() {
+            if (!userSetFontSize) {
+                autoAdjustFontSize();
+            }
+        };
+
+        // 依據瀏覽器寬度自動判斷適當字級
+        function autoAdjustFontSize() {
+            const width = window.innerWidth;
+            if (width < 600) {
+                setFontSize('sm', false);
+            } else if (width < 1200) {
+                setFontSize('md', false);
+            } else {
+                setFontSize('lg', false);
+            }
+        }
+
+        // 調整文字大小
+        function setFontSize(size, isUserAction = true) {
+            if (isUserAction) userSetFontSize = true;
+
+            document.body.classList.remove('font-sm', 'font-md', 'font-lg');
+            document.getElementById('fsSm').classList.remove('active');
+            document.getElementById('fsMd').classList.remove('active');
+            document.getElementById('fsLg').classList.remove('active');
+
+            if (size === 'sm') {
+                document.body.classList.add('font-sm');
+                document.getElementById('fsSm').classList.add('active');
+            } else if (size === 'lg') {
+                document.body.classList.add('font-lg');
+                document.getElementById('fsLg').classList.add('active');
+            } else {
+                document.body.classList.add('font-md');
+                document.getElementById('fsMd').classList.add('active');
+            }
+        }
+
+        // 切換主分頁：個股 vs 期貨
+        function switchMainTab(tab) {
+            currentMainTab = tab;
+            const tabStock = document.getElementById('tabStock');
+            const tabFutures = document.getElementById('tabFutures');
+            const stockView = document.getElementById('stockView');
+            const futuresView = document.getElementById('futuresView');
+            const btnCalc = document.getElementById('btnCalc');
+
+            if (tab === 'STOCK') {
+                tabStock.classList.add('active');
+                tabFutures.classList.remove('active');
+                stockView.style.display = 'block';
+                futuresView.style.display = 'none';
+                switchMode(currentMode); 
+            } else {
+                tabFutures.classList.add('active');
+                tabStock.classList.remove('active');
+                stockView.style.display = 'none';
+                futuresView.style.display = 'block';
+                btnCalc.className = 'calc-btn fut-bg';
+                btnCalc.innerText = '⚡ 計算台指期預估關卡與盈虧';
+            }
+            document.getElementById('resultCard').style.display = 'none';
+        }
+
+        // 切換個股模式
+        function switchMode(mode) {
+            currentMode = mode;
+            const tabUp = document.getElementById('tabUp');
+            const tabDown = document.getElementById('tabDown');
+            const tabW5 = document.getElementById('tabW5');
+            const btnCalc = document.getElementById('btnCalc');
+            const lblLow = document.getElementById('lblLow');
+            const lblHigh = document.getElementById('lblHigh');
+
+            tabUp.className = 'tab-btn';
+            tabDown.className = 'tab-btn';
+            tabW5.className = 'tab-btn';
+
+            if (mode === 'UP') {
+                tabUp.className = 'tab-btn active-up';
+                btnCalc.className = 'calc-btn up-bg';
+                btnCalc.innerText = '計算上漲 ABC 目標價';
+                lblLow.innerText = 'A 波低點 (A Low)';
+                lblHigh.innerText = 'A 波頂點 (A High)';
+            } else if (mode === 'DOWN') {
+                tabDown.className = 'tab-btn active-down';
+                btnCalc.className = 'calc-btn down-bg';
+                btnCalc.innerText = '計算下跌 ABC 修正價';
+                lblLow.innerText = 'A 波低點 (A Low)';
+                lblHigh.innerText = 'A 波頂點 (A High)';
+            } else if (mode === 'WAVE5') {
+                tabW5.className = 'tab-btn active-w5';
+                btnCalc.className = 'calc-btn w5-bg';
+                btnCalc.innerText = '估算 1~5 波推升浪';
+                lblLow.innerText = '1 波起漲點 (Wave 1 Low)';
+                lblHigh.innerText = '1 波頂點 (Wave 1 High)';
+            }
+        }
+
+        // 重置功能
+        function resetForm() {
+            if (currentMainTab === 'STOCK') {
+                document.getElementById('stockName').value = '';
+                document.getElementById('aLow').value = '';
+                document.getElementById('aHigh').value = '';
+            } else {
+                document.getElementById('futLow').value = '';
+                document.getElementById('futHigh').value = '';
+            }
+            document.getElementById('resultCard').style.display = 'none';
+        }
+
+        // 期貨計算
+        function generateFuturesResultHtml(futName, low, high, pointValue) {
+            const range = high - low;
+            const pointVal = parseFloat(pointValue);
+            
+            const b382 = (high - range * 0.382).toFixed(1);
+            const b500 = (high - range * 0.500).toFixed(1);
+            const b618 = (high - range * 0.618).toFixed(1);
+            
+            const c100 = (parseFloat(b618) + range).toFixed(1);
+            const c1382 = (parseFloat(b618) + range * 1.382).toFixed(1);
+
+            const rangeMoney = (range * pointVal).toLocaleString();
+
+            const resultsHtml = `
+                <div class="section-title">⚡ 【${futName}】 波段與損益計算</div>
+                <p style="margin: 5px 0 15px 0; line-height: 1.6;">
+                    起漲低點：<b>${low}</b> | 衝高頂點：<b>${high}</b><br>
+                    波段高低差：<b>${range} 點</b> | 1口單對應波動價值：<b style="color:#e53e3e;">NT$ ${rangeMoney} 元</b>
+                </p>
+
+                <div class="section-title">1. 多頭回檔關鍵支撐區 (做多觀察區)</div>
+                <table>
+                    <thead><tr><th>回檔關卡</th><th>預估指數點位</th><th>點數拉回</th><th>1口預估浮虧金額</th></tr></thead>
+                    <tbody>
+                        <tr><td>38.2% 淺幅回檔</td><td><b>${b382}</b></td><td>-${(range * 0.382).toFixed(1)} 點</td><td>-NT$ ${((range * 0.382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>
+                        <tr class="highlight-fut"><td>50.0% 標準回檔</td><td><b>${b500}</b></td><td>-${(range * 0.5).toFixed(1)} 點</td><td>-NT$ ${((range * 0.5) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>
+                        <tr class="highlight-fut"><td>61.8% 強支撐黃金角</td><td><b>${b618}</b></td><td>-${(range * 0.618).toFixed(1)} 點</td><td>-NT$ ${((range * 0.618) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="section-title">2. C 波發動估算目標區 (假設於 0.618 止跌)</div>
+                <table>
+                    <thead><tr><th>擴展倍數</th><th>目標點位</th><th>預估獲利點數</th><th>1口預估獲利金額</th></tr></thead>
+                    <tbody>
+                        <tr class="highlight-fut"><td>1.000 (1:1滿足)</td><td><b>${c100}</b></td><td>+${(c100 - b618).toFixed(1)} 點</td><td>+NT$ ${((c100 - b618) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>
+                        <tr><td>1.382 (強勢擴展)</td><td><b>${c1382}</b></td><td>+${(c1382 - b618).toFixed(1)} 點</td><td>+NT$ ${((c1382 - b618) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})}</td></tr>
+                    </tbody>
+                </table>
+            `;
+
+            return { resultsHtml, bKey: `支撐:${b618}`, cKey: `目標:${c100}`, range: `${range}點` };
+        }
+
+        // 個股計算
+        function generateResultHtml(mode, stockName, aLow, aHigh) {
+            const wave1 = aHigh - aLow;
+            const aPct = ((wave1 / aLow) * 100).toFixed(1);
+            let resultsHtml = "";
+            let bKey = "", cKey = "";
+
+            if (mode === 'UP') {
+                const b500 = aHigh - (wave1 * 0.5);
+                const b618 = aHigh - (wave1 * 0.618);
+                const c100 = b618 + wave1;
+
+                resultsHtml = `
+                    <div class="section-title">📊 【${stockName}】 上漲 A 波幅度分析</div>
+                    <p style="margin: 5px 0 15px 0; line-height: 1.6;">
+                        A 波低點：<b>${aLow}</b> | A 波高點：<b>${aHigh}</b><br>
+                        A 波漲幅：<b>${wave1.toFixed(2)} 元</b> (+${aPct}%)
+                    </p>
+
+                    <div class="section-title">2. B 波回檔預估支撐區</div>
+                    <table>
+                        <thead><tr><th>回檔比例</th><th>預估 B 波點位</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>38.2% (強勢)</td><td><b>${(aHigh - wave1*0.382).toFixed(2)}</b></td><td>淺幅修正，多頭強勁</td></tr>
+                            <tr class="highlight-up"><td>50.0% (中性)</td><td><b>${b500.toFixed(2)}</b></td><td>標準回檔中軸</td></tr>
+                            <tr class="highlight-up"><td>61.8% (黃金)</td><td><b>${b618.toFixed(2)}</b></td><td>關鍵強支撐區</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="section-title">3. C 波目標價估算</div>
+                    <table>
+                        <thead><tr><th>擴展比例</th><th>假設 B 在 0.5</th><th>假設 B 在 0.618</th></tr></thead>
+                        <tbody>
+                            <tr class="highlight-up"><td>1.000 (1:1等長)</td><td><b>${(b500 + wave1).toFixed(2)}</b></td><td><b>${(b618 + wave1).toFixed(2)}</b></td></tr>
+                            <tr><td>1.382 (擴展)</td><td><b>${(b500 + wave1*1.382).toFixed(2)}</b></td><td><b>${(b618 + wave1*1.382).toFixed(2)}</b></td></tr>
+                            <tr><td>1.618 (強勢)</td><td><b>${(b500 + wave1*1.618).toFixed(2)}</b></td><td><b>${(b618 + wave1*1.618).toFixed(2)}</b></td></tr>
+                        </tbody>
+                    </table>
+                `;
+                bKey = b618.toFixed(2);
+                cKey = c100.toFixed(2);
+
+            } else if (mode === 'DOWN') {
+                const b500 = aLow + (wave1 * 0.5);
+                const c100 = b500 - wave1;
+
+                resultsHtml = `
+                    <div class="section-title">📊 【${stockName}】 下跌 A 波殺盤分析</div>
+                    <p style="margin: 5px 0 15px 0; line-height: 1.6;">
+                        A 波高點：<b>${aHigh}</b> | A 波低點：<b>${aLow}</b><br>
+                        A 波跌幅：<b>${wave1.toFixed(2)} 元</b> (-${((wave1 / aHigh) * 100).toFixed(1)}%)
+                    </p>
+
+                    <div class="section-title">2. B 波反彈逃命壓力區</div>
+                    <table>
+                        <thead><tr><th>反彈比例</th><th>預估 B 波點位</th><th>說明</th></tr></thead>
+                        <tbody>
+                            <tr><td>38.2% (弱勢)</td><td><b>${(aLow + wave1*0.382).toFixed(2)}</b></td><td>反彈無力，空頭極強</td></tr>
+                            <tr class="highlight-down"><td>50.0% (中性)</td><td><b>${b500.toFixed(2)}</b></td><td>標準反彈壓力區</td></tr>
+                            <tr class="highlight-down"><td>61.8% (強勢)</td><td><b>${(aLow + wave1*0.618).toFixed(2)}</b></td><td>解套賣壓最重區</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="section-title">3. C 波殺盤目標低點</div>
+                    <table>
+                        <thead><tr><th>擴展比例</th><th>假設 B 彈到 0.382</th><th>假設 B 彈到 0.500</th></tr></thead>
+                        <tbody>
+                            <tr class="highlight-down"><td>1.000 (1:1滿足)</td><td><b>${(aLow + wave1*0.382 - wave1).toFixed(2)}</b></td><td><b>${(b500 - wave1).toFixed(2)}</b></td></tr>
+                            <tr><td>1.618 (主跌段)</td><td><b>${(aLow + wave1*0.382 - wave1*1.618).toFixed(2)}</b></td><td><b>${(b500 - wave1*1.618).toFixed(2)}</b></td></tr>
+                        </tbody>
+                    </table>
+                `;
+                bKey = b500.toFixed(2);
+                cKey = c100.toFixed(2);
+
+            } else if (mode === 'WAVE5') {
+                const w2_618 = aHigh - (wave1 * 0.618);
+                const w3_1618 = w2_618 + (wave1 * 1.618);
+                const w3_2618 = w2_618 + (wave1 * 2.618);
+                const w4_382 = w3_1618 - ((w3_1618 - w2_618) * 0.382);
+                const w5_equal = w4_382 + wave1;
+
+                resultsHtml = `
+                    <div class="section-title">🔥 【${stockName}】 1~5 波推升全波段推測</div>
+                    <p style="margin: 5px 0 15px 0; line-height: 1.6;">
+                        1 波低點：<b>${aLow}</b> | 1 波高點：<b>${aHigh}</b><br>
+                        1 波基礎漲幅：<b>${wave1.toFixed(2)} 元</b> (+${aPct}%)
+                    </p>
+
+                    <div class="section-title">🌊 完整 5 波推升推估軌跡 (標準黃金比例模型)</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>波段</th>
+                                <th>關鍵比例算式</th>
+                                <th>預估點位</th>
+                                <th>波浪觀察重點</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><b>第 2 波 (拉回)</b></td>
+                                <td>1波回檔 61.8%</td>
+                                <td><b>${w2_618.toFixed(2)}</b></td>
+                                <td>絕對不可跌破 1 波起點 (${aLow})</td>
+                            </tr>
+                            <tr class="highlight-w5">
+                                <td><b>第 3 波 (主升段)</b></td>
+                                <td>2波低點 + 1.618倍 1波長</td>
+                                <td><b>${w3_1618.toFixed(2)}</b></td>
+                                <td>多頭最猛烈主升段 (若超強看 ${w3_2618.toFixed(2)})</td>
+                            </tr>
+                            <tr>
+                                <td><b>第 4 波 (修正)</b></td>
+                                <td>3波頂點回擋 38.2%</td>
+                                <td><b>${w4_382.toFixed(2)}</b></td>
+                                <td>原則上不應重疊 1 波頂點 (${aHigh})</td>
+                            </tr>
+                            <tr class="highlight-w5">
+                                <td><b>第 5 波 (末升段)</b></td>
+                                <td>4波低點 + 1:1 第1波長</td>
+                                <td><b>${w5_equal.toFixed(2)}</b></td>
+                                <td>末升段目標區，需防範高點爆量背離</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                `;
+                bKey = `W3:${w3_1618.toFixed(2)}`;
+                cKey = `W5:${w5_equal.toFixed(2)}`;
+            }
+
+            return { resultsHtml, bKey, cKey, wave1: wave1.toFixed(2) };
+        }
+
+        // 計算與儲存紀錄
+        function calculate() {
+            if (currentMainTab === 'STOCK') {
+                const nameInput = document.getElementById('stockName').value.trim();
+                const stockName = nameInput || "未命名股票";
+                const aLow = parseFloat(document.getElementById('aLow').value);
+                const aHigh = parseFloat(document.getElementById('aHigh').value);
+
+                if (isNaN(aLow) || isNaN(aHigh) || aHigh <= aLow) {
+                    alert("請輸入正確的高低點，且高點必須大於低點！");
+                    return;
+                }
+
+                const res = generateResultHtml(currentMode, stockName, aLow, aHigh);
+                document.getElementById('dynamicResults').innerHTML = res.resultsHtml;
+                document.getElementById('resultCard').style.display = 'block';
+
+                saveToHistory({
+                    mainTab: 'STOCK',
+                    mode: currentMode,
+                    stockName,
+                    aLow,
+                    aHigh,
+                    bKey: res.bKey,
+                    cKey: res.cKey,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                });
+
+            } else {
+                const futName = document.getElementById('futName').value.trim() || "台指期";
+                const pointVal = document.getElementById('futContract').value;
+                const futLow = parseFloat(document.getElementById('futLow').value);
+                const futHigh = parseFloat(document.getElementById('futHigh').value);
+
+                if (isNaN(futLow) || isNaN(futHigh) || futHigh <= futLow) {
+                    alert("請輸入正確的高低點點數，且高點必須大於低點！");
+                    return;
+                }
+
+                const res = generateFuturesResultHtml(futName, futLow, futHigh, pointVal);
+                document.getElementById('dynamicResults').innerHTML = res.resultsHtml;
+                document.getElementById('resultCard').style.display = 'block';
+
+                saveToHistory({
+                    mainTab: 'FUTURES',
+                    mode: 'FUTURES',
+                    stockName: `${futName} (${pointVal==='200'?'大台':pointVal==='50'?'小台':'微台'})`,
+                    aLow: futLow,
+                    aHigh: futHigh,
+                    pointVal,
+                    bKey: res.bKey,
+                    cKey: res.cKey,
+                    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                });
+            }
+        }
+
+        function saveToHistory(record) {
+            let history = JSON.parse(localStorage.getItem('abc_history')) || [];
+            history.unshift(record);
+            if (history.length > 30) history.pop();
+            localStorage.setItem('abc_history', JSON.stringify(history));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const historyList = document.getElementById('historyList');
+            let history = JSON.parse(localStorage.getItem('abc_history')) || [];
+
+            if (history.length === 0) {
+                historyList.innerHTML = '<div class="empty-tip">尚無歷史紀錄</div>';
+                return;
+            }
+
+            let html = "";
+            history.forEach((item, index) => {
+                let modeClass = 'up';
+                let tagHtml = '<span class="tag tag-up">上漲ABC</span>';
+                let detailText = `A: ${item.aLow}➔${item.aHigh} | B: ${item.bKey} | C: ${item.cKey}`;
+
+                if (item.mainTab === 'FUTURES' || item.mode === 'FUTURES') {
+                    modeClass = 'futures';
+                    tagHtml = '<span class="tag tag-fut">期貨</span>';
+                    detailText = `低高: ${item.aLow}➔${item.aHigh} | ${item.bKey} | ${item.cKey}`;
+                } else if (item.mode === 'DOWN') {
+                    modeClass = 'down';
+                    tagHtml = '<span class="tag tag-down">下跌ABC</span>';
+                } else if (item.mode === 'WAVE5') {
+                    modeClass = 'wave5';
+                    tagHtml = '<span class="tag tag-w5">5波推升</span>';
+                    detailText = `1波: ${item.aLow}➔${item.aHigh} | ${item.bKey} | ${item.cKey}`;
+                }
+
+                html += `
+                    <div class="history-item ${modeClass}" onclick="loadHistoryItem(${index})">
+                        <span class="delete-item-btn" onclick="deleteHistoryItem(event, ${index})">✕</span>
+                        <div class="history-title">
+                            <span>${item.stockName} ${tagHtml}</span>
+                            <span style="font-size: 11px; color: #a0aec0;">${item.time}</span>
+                        </div>
+                        <div class="history-detail">
+                            ${detailText}
+                        </div>
+                    </div>
+                `;
+            });
+            historyList.innerHTML = html;
+        }
+
+        function loadHistoryItem(index) {
+            let history = JSON.parse(localStorage.getItem('abc_history')) || [];
+            const item = history[index];
+            if (item) {
+                if (item.mainTab === 'FUTURES' || item.mode === 'FUTURES') {
+                    switchMainTab('FUTURES');
+                    document.getElementById('futLow').value = item.aLow;
+                    document.getElementById('futHigh').value = item.aHigh;
+                    if(item.pointVal) document.getElementById('futContract').value = item.pointVal;
+
+                    const cleanName = item.stockName.split(' (')[0] || "台指期";
+                    const res = generateFuturesResultHtml(cleanName, item.aLow, item.aHigh, item.pointVal || '200');
+                    document.getElementById('dynamicResults').innerHTML = res.resultsHtml;
+                } else {
+                    switchMainTab('STOCK');
+                    switchMode(item.mode || 'UP');
+                    document.getElementById('stockName').value = item.stockName;
+                    document.getElementById('aLow').value = item.aLow;
+                    document.getElementById('aHigh').value = item.aHigh;
+
+                    const res = generateResultHtml(item.mode, item.stockName, parseFloat(item.aLow), parseFloat(item.aHigh));
+                    document.getElementById('dynamicResults').innerHTML = res.resultsHtml;
+                }
+                document.getElementById('resultCard').style.display = 'block';
+            }
+        }
+
+        function deleteHistoryItem(event, index) {
+            event.stopPropagation();
+            let history = JSON.parse(localStorage.getItem('abc_history')) || [];
+            history.splice(index, 1);
+            localStorage.setItem('abc_history', JSON.stringify(history));
+            renderHistory();
+        }
+
+        function clearHistory() {
+            if (confirm("確定要清空所有歷史紀錄嗎？")) {
+                localStorage.removeItem('abc_history');
+                renderHistory();
+            }
+        }
+    </script>
+</body>
+</html>
