@@ -19,7 +19,34 @@
             background: #f4f6f8; 
             color: #333; 
             display: flex; 
+            flex-direction: column;
             min-height: 100vh; 
+        }
+
+        /* 頂層頁面分頁：心得 / 計算 */
+        .top-nav {
+            display: flex;
+            background: #1a202c;
+            border-bottom: 1px solid #2d3748;
+            flex-shrink: 0;
+        }
+        .top-nav-tab {
+            padding: clamp(12px, 1.5vw, 16px) clamp(16px, 2vw, 28px);
+            font-weight: bold;
+            font-size: clamp(0.9rem, 1.1vw, 1rem);
+            color: #a0aec0;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: 0.2s;
+        }
+        .top-nav-tab:hover { color: #e2e8f0; background: #2d3748; }
+        .top-nav-tab.active { color: #63b3ed; border-bottom-color: #3182ce; background: #17202e; }
+
+        /* 分頁容器：包住 sidebar + main-content 或 心得頁面 */
+        .app-body {
+            flex: 1;
+            display: flex;
+            min-height: 0;
         }
         
         /* 手動字級輔助控制 */
@@ -171,12 +198,42 @@
             align-items: center;
         }
 
+        /* 「計算」分頁容器 (內含 sidebar + main-content) */
+        #pageCalc {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        /* 「心得」分頁容器 */
+        #pageJournal {
+            flex: 1;
+            overflow-y: auto;
+            padding: clamp(12px, 2.5vw, 30px);
+        }
+        .journal-toolbar { display: flex; justify-content: flex-end; margin-bottom: 4px; }
+        .journal-add-btn { background: #3182ce; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; cursor: pointer; }
+        .journal-add-btn:hover { background: #2b6cb0; }
+        .journal-form-box { display: none; margin: 15px 0 20px 0; padding: clamp(12px, 2vw, 18px); background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
+        .journal-form-row { display: grid; grid-template-columns: 2fr 1fr; gap: clamp(8px, 1.5vw, 16px); }
+        textarea.journal-textarea { width: 100%; padding: clamp(8px, 1vw, 12px); border: 1px solid #cbd5e0; border-radius: 6px; font-family: inherit; font-size: clamp(0.85rem, 1vw, 1rem); resize: vertical; }
+        .journal-item { background: #f7fafc; border: 1px solid #e2e8f0; border-left: 4px solid #3182ce; border-radius: 8px; padding: clamp(12px, 1.5vw, 16px); margin-bottom: 12px; }
+        .journal-item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; gap: 10px; }
+        .journal-item-title { font-weight: bold; font-size: clamp(0.95rem, 1.1vw, 1.1rem); color: #1a202c; word-break: break-word; }
+        .journal-item-date { font-size: 0.8rem; color: #a0aec0; white-space: nowrap; }
+        .journal-item-content { color: #4a5568; line-height: 1.6; white-space: pre-wrap; margin-bottom: 10px; word-break: break-word; }
+        .journal-item-actions { display: flex; gap: 8px; justify-content: flex-end; }
+        .journal-action-btn { border: none; background: transparent; color: #718096; cursor: pointer; font-size: 0.8rem; font-weight: bold; padding: 4px 8px; border-radius: 4px; }
+        .journal-action-btn:hover { background: #edf2f7; color: #2b6cb0; }
+        .journal-action-btn.danger:hover { background: #fff5f5; color: #e53e3e; }
+
         /* 行動裝置適應 */
         @media (max-width: 768px) {
-            body { flex-direction: column; overflow-y: auto; }
+            #pageCalc { flex-direction: column; }
             .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #2d3748; max-height: 180px; flex-shrink: 0; }
             .main-content { padding: 12px; overflow: visible; }
             .tab-group { flex-direction: column; }
+            .journal-form-row { grid-template-columns: 1fr; }
         }
         
         @media (max-width: 480px) {
@@ -186,6 +243,17 @@
     </style>
 </head>
 <body>
+
+    <!-- 頂層頁面分頁 -->
+    <div class="top-nav">
+        <div class="top-nav-tab" id="navJournal" onclick="switchPage('JOURNAL')">📝 心得</div>
+        <div class="top-nav-tab active" id="navCalc" onclick="switchPage('CALC')">🧮 計算</div>
+    </div>
+
+    <div class="app-body">
+
+    <!-- 「計算」分頁：台股個股 & 台指期貨 -->
+    <div id="pageCalc">
 
     <!-- 左側歷史紀錄欄 -->
     <div class="sidebar">
@@ -290,13 +358,209 @@
         </div>
     </div>
 
+    </div>
+    <!-- /pageCalc -->
+
+    <!-- 「心得」分頁：自由筆記本 -->
+    <div id="pageJournal" style="display: none;">
+        <div class="container">
+            <div class="card">
+                <div class="header-bar">
+                    <h2>📝 心得筆記本</h2>
+                </div>
+
+                <div class="journal-toolbar">
+                    <button class="journal-add-btn" onclick="openJournalForm()">➕ 新增心得</button>
+                </div>
+
+                <!-- 新增 / 編輯表單 -->
+                <div class="journal-form-box" id="journalForm">
+                    <div class="journal-form-row">
+                        <div class="form-group">
+                            <label>標題</label>
+                            <input type="text" id="journalTitle" placeholder="例如: 今日盤中觀察">
+                        </div>
+                        <div class="form-group">
+                            <label>日期</label>
+                            <input type="date" id="journalDate">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label>內容</label>
+                        <textarea class="journal-textarea" id="journalContent" rows="6" placeholder="寫下你的心得、盤感、檢討..."></textarea>
+                    </div>
+                    <div class="btn-group" style="margin-top: 12px;">
+                        <button class="calc-btn up-bg" onclick="saveJournalEntry()">💾 儲存心得</button>
+                        <button class="reset-btn" onclick="cancelJournalForm()">取消</button>
+                    </div>
+                </div>
+
+                <!-- 心得列表 -->
+                <div id="journalList">
+                    <div class="empty-tip">尚無心得紀錄，點選右上角「新增心得」開始記錄！</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /pageJournal -->
+
+    </div>
+    <!-- /app-body -->
+
     <script>
         let currentMainTab = 'STOCK';
         let currentMode = 'UP';
+        let editingJournalId = null;
 
         window.onload = function() {
             renderHistory();
+            renderJournal();
         };
+
+        /* 頂層頁面切換：心得 / 計算 */
+        function switchPage(page) {
+            const navCalc = document.getElementById('navCalc');
+            const navJournal = document.getElementById('navJournal');
+            const pageCalc = document.getElementById('pageCalc');
+            const pageJournal = document.getElementById('pageJournal');
+
+            if (page === 'JOURNAL') {
+                navJournal.classList.add('active');
+                navCalc.classList.remove('active');
+                pageCalc.style.display = 'none';
+                pageJournal.style.display = 'block';
+                renderJournal();
+            } else {
+                navCalc.classList.add('active');
+                navJournal.classList.remove('active');
+                pageCalc.style.display = 'flex';
+                pageJournal.style.display = 'none';
+            }
+        }
+
+        /* ===== 心得筆記本 ===== */
+
+        function getJournalList() {
+            try {
+                return JSON.parse(localStorage.getItem('trading_journal')) || [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveJournalList(list) {
+            try {
+                localStorage.setItem('trading_journal', JSON.stringify(list));
+            } catch (e) {
+                console.warn("無法存取 localStorage:", e);
+            }
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.innerText = str || '';
+            return div.innerHTML;
+        }
+
+        function openJournalForm(id = null) {
+            editingJournalId = id;
+            const form = document.getElementById('journalForm');
+            const titleInput = document.getElementById('journalTitle');
+            const dateInput = document.getElementById('journalDate');
+            const contentInput = document.getElementById('journalContent');
+
+            if (id) {
+                const item = getJournalList().find(n => n.id === id);
+                if (item) {
+                    titleInput.value = item.title;
+                    dateInput.value = item.date;
+                    contentInput.value = item.content;
+                }
+            } else {
+                titleInput.value = '';
+                dateInput.value = new Date().toISOString().slice(0, 10);
+                contentInput.value = '';
+            }
+
+            form.style.display = 'block';
+            titleInput.focus();
+        }
+
+        function cancelJournalForm() {
+            editingJournalId = null;
+            document.getElementById('journalForm').style.display = 'none';
+        }
+
+        function saveJournalEntry() {
+            const title = document.getElementById('journalTitle').value.trim();
+            const date = document.getElementById('journalDate').value || new Date().toISOString().slice(0, 10);
+            const content = document.getElementById('journalContent').value.trim();
+
+            if (!title && !content) {
+                alert("請至少輸入標題或內容！");
+                return;
+            }
+
+            let list = getJournalList();
+
+            if (editingJournalId) {
+                const idx = list.findIndex(n => n.id === editingJournalId);
+                if (idx !== -1) {
+                    list[idx] = { ...list[idx], title: title || "未命名心得", date, content };
+                }
+            } else {
+                list.unshift({
+                    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+                    title: title || "未命名心得",
+                    date,
+                    content,
+                    createdAt: new Date().toISOString()
+                });
+            }
+
+            saveJournalList(list);
+            cancelJournalForm();
+            renderJournal();
+        }
+
+        function deleteJournalEntry(id) {
+            if (!confirm("確定要刪除這篇心得嗎？")) return;
+            const list = getJournalList().filter(n => n.id !== id);
+            saveJournalList(list);
+            renderJournal();
+        }
+
+        function renderJournal() {
+            const container = document.getElementById('journalList');
+            const list = getJournalList();
+
+            list.sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+            if (list.length === 0) {
+                container.innerHTML = '<div class="empty-tip">尚無心得紀錄，點選右上角「新增心得」開始記錄！</div>';
+                return;
+            }
+
+            let html = "";
+            list.forEach(item => {
+                const safeTitle = escapeHtml(item.title);
+                const safeContent = escapeHtml(item.content).replace(/\n/g, '<br>');
+                html += `
+                    <div class="journal-item">
+                        <div class="journal-item-header">
+                            <span class="journal-item-title">${safeTitle}</span>
+                            <span class="journal-item-date">${item.date || ''}</span>
+                        </div>
+                        <div class="journal-item-content">${safeContent}</div>
+                        <div class="journal-item-actions">
+                            <button class="journal-action-btn" onclick="openJournalForm('${item.id}')">✏️ 編輯</button>
+                            <button class="journal-action-btn danger" onclick="deleteJournalEntry('${item.id}')">🗑️ 刪除</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
 
         function setFontSize(size) {
             document.body.classList.remove('font-sm', 'font-md', 'font-lg');
