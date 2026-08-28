@@ -354,6 +354,9 @@
             <!-- 計算結果區 -->
             <div class="card" id="resultCard" style="display: none;">
                 <div id="dynamicResults"></div>
+                <div class="section-title">📈 走勢預估圖</div>
+                <div id="trendChartBox"></div>
+                <div style="font-size: 0.75rem; color: #a0aec0; margin-top: 6px;">*圖表以表格中的代表性關鍵比例繪製，實際走勢仍請搭配上方表格的多重情境判斷</div>
             </div>
         </div>
     </div>
@@ -661,11 +664,91 @@
             document.getElementById('resultCard').style.display = 'none';
         }
 
+        /* 繪製走勢預估圖 (以 SVG 呈現，不需外部圖表套件) */
+        function renderTrendChart(points, mode) {
+            const box = document.getElementById('trendChartBox');
+            if (!box) return;
+            if (!points || points.length === 0) {
+                box.innerHTML = '';
+                return;
+            }
+
+            const colorMap = { UP: '#e53e3e', DOWN: '#38a169', WAVE5: '#dd6b20' };
+            const lineColor = colorMap[mode] || '#3182ce';
+
+            const width = 720;
+            const height = 260;
+            const padL = 56, padR = 20, padT = 24, padB = 46;
+            const plotW = width - padL - padR;
+            const plotH = height - padT - padB;
+
+            const values = points.map(p => p.value);
+            let minV = Math.min(...values);
+            let maxV = Math.max(...values);
+            if (minV === maxV) { minV -= 1; maxV += 1; }
+            const pad = (maxV - minV) * 0.18;
+            minV -= pad;
+            maxV += pad;
+
+            const n = points.length;
+            const xStep = n > 1 ? plotW / (n - 1) : 0;
+            const xFor = (i) => padL + i * xStep;
+            const yFor = (v) => padT + plotH - ((v - minV) / (maxV - minV)) * plotH;
+
+            // 水平格線 + Y 軸刻度
+            const gridCount = 4;
+            let gridLines = '';
+            for (let g = 0; g <= gridCount; g++) {
+                const v = minV + (maxV - minV) * (g / gridCount);
+                const y = yFor(v);
+                gridLines += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${width - padR}" y2="${y.toFixed(1)}" stroke="#e2e8f0" stroke-width="1" />`;
+                gridLines += `<text x="${padL - 8}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="#a0aec0">${v.toFixed(1)}</text>`;
+            }
+
+            // 判斷波峰/波谷，決定標籤位置（避免與折線重疊）
+            const isPeak = (i) => {
+                const v = points[i].value;
+                const prevV = i > 0 ? points[i - 1].value : null;
+                const nextV = i < points.length - 1 ? points[i + 1].value : null;
+                if (prevV === null) return nextV !== null ? v > nextV : true;
+                if (nextV === null) return v > prevV;
+                return v >= prevV && v >= nextV;
+            };
+
+            const linePoints = points.map((p, i) => `${xFor(i).toFixed(1)},${yFor(p.value).toFixed(1)}`).join(' ');
+
+            let dotsAndLabels = '';
+            points.forEach((p, i) => {
+                const x = xFor(i);
+                const y = yFor(p.value);
+                const peak = isPeak(i);
+                const valueY = peak ? y - 14 : y + 24;
+                const nameY = peak ? y - 28 : y + 40;
+
+                dotsAndLabels += `
+                    <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5" fill="${lineColor}" stroke="white" stroke-width="2" />
+                    <text x="${x.toFixed(1)}" y="${valueY.toFixed(1)}" text-anchor="middle" font-size="12" font-weight="bold" fill="#2d3748">${p.valueLabel}</text>
+                    <text x="${x.toFixed(1)}" y="${nameY.toFixed(1)}" text-anchor="middle" font-size="11" fill="#718096">${escapeHtml(p.name)}</text>
+                `;
+            });
+
+            const svg = `
+                <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" style="width:100%; height:auto; display:block; overflow:visible;">
+                    ${gridLines}
+                    <polyline points="${linePoints}" fill="none" stroke="${lineColor}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />
+                    ${dotsAndLabels}
+                </svg>
+            `;
+
+            box.innerHTML = svg;
+        }
+
         /* 核心計算：台指期貨（多重倍率多波段擴充） */
         function generateFuturesResultHtml(mode, futName, low, high, pointValue, actualW2Low = null) {
             const pointVal = parseFloat(pointValue);
             let resultsHtml = "";
             let bKey = "", cKey = "";
+            let points = [];
 
             if (mode === 'UP') {
                 const range = high - low;
@@ -706,6 +789,12 @@
                 `;
                 bKey = `支撐:${b618.toFixed(1)}`;
                 cKey = `目標:${c100.toFixed(1)}`;
+                points = [
+                    { name: 'A波低點', value: low, valueLabel: low.toFixed(1) },
+                    { name: 'A波高點', value: high, valueLabel: high.toFixed(1) },
+                    { name: 'B波(61.8%)', value: b618, valueLabel: b618.toFixed(1) },
+                    { name: 'C波(目標)', value: c100, valueLabel: c100.toFixed(1) }
+                ];
 
             } else if (mode === 'DOWN') {
                 const range = low - high; // 高減低
@@ -746,6 +835,12 @@
                 `;
                 bKey = `壓力:${b382.toFixed(1)}`;
                 cKey = `目標:${c100.toFixed(1)}`;
+                points = [
+                    { name: 'A波高點', value: low, valueLabel: low.toFixed(1) },
+                    { name: 'A波低點', value: high, valueLabel: high.toFixed(1) },
+                    { name: 'B波(38.2%)', value: b382, valueLabel: b382.toFixed(1) },
+                    { name: 'C波(目標)', value: c100, valueLabel: c100.toFixed(1) }
+                ];
 
             } else if (mode === 'WAVE5') {
                 const wave1 = high - low; // 第 1 波幅度
@@ -950,9 +1045,17 @@
                 `;
                 bKey = `W2:${effectiveW2.toFixed(1)}`;
                 cKey = `W3:${w3_1618.toFixed(1)}`;
+                points = [
+                    { name: '1波低點', value: low, valueLabel: low.toFixed(1) },
+                    { name: '1波高點', value: high, valueLabel: high.toFixed(1) },
+                    { name: '2波低點', value: effectiveW2, valueLabel: effectiveW2.toFixed(1) },
+                    { name: '3波高點(1.618)', value: w3_1618, valueLabel: w3_1618.toFixed(1) },
+                    { name: '4波低點(38.2%)', value: w4_382, valueLabel: w4_382.toFixed(1) },
+                    { name: '5波高點(1:1)', value: w5_1000, valueLabel: w5_1000.toFixed(1) }
+                ];
             }
 
-            return { resultsHtml, bKey, cKey };
+            return { resultsHtml, bKey, cKey, points };
         }
 
         /* 觸發更新 2 波低點函數 */
@@ -973,6 +1076,7 @@
 
             const res = generateFuturesResultHtml('WAVE5', futName, low, high, pointVal, val);
             document.getElementById('dynamicResults').innerHTML = res.resultsHtml;
+            renderTrendChart(res.points, 'WAVE5');
 
             // 更新歷史紀錄中的 W2/W3 點位
             saveToHistory({
@@ -1006,6 +1110,7 @@
 
             const res = generateResultHtml('WAVE5', stockName, low, high, val);
             document.getElementById('dynamicResults').innerHTML = res.resultsHtml;
+            renderTrendChart(res.points, 'WAVE5');
 
             // 更新歷史紀錄中的 W2/W3 點位
             saveToHistory({
@@ -1025,6 +1130,7 @@
             let wave1 = 0;
             let resultsHtml = "";
             let bKey = "", cKey = "";
+            let points = [];
 
             if (mode === 'UP') {
                 wave1 = aHigh - aLow;
@@ -1066,6 +1172,12 @@
                 `;
                 bKey = b618.toFixed(2);
                 cKey = c100.toFixed(2);
+                points = [
+                    { name: 'A波低點', value: aLow, valueLabel: aLow.toFixed(2) },
+                    { name: 'A波高點', value: aHigh, valueLabel: aHigh.toFixed(2) },
+                    { name: 'B波(61.8%)', value: b618, valueLabel: b618.toFixed(2) },
+                    { name: 'C波(目標)', value: c100, valueLabel: c100.toFixed(2) }
+                ];
 
             } else if (mode === 'DOWN') {
                 wave1 = aLow - aHigh; // 高減低
@@ -1104,6 +1216,12 @@
                 `;
                 bKey = b500.toFixed(2);
                 cKey = c100.toFixed(2);
+                points = [
+                    { name: 'A波高點', value: aLow, valueLabel: aLow.toFixed(2) },
+                    { name: 'A波低點', value: aHigh, valueLabel: aHigh.toFixed(2) },
+                    { name: 'B波(50%)', value: b500, valueLabel: b500.toFixed(2) },
+                    { name: 'C波(目標)', value: c100, valueLabel: c100.toFixed(2) }
+                ];
 
             } else if (mode === 'WAVE5') {
                 wave1 = aHigh - aLow;
@@ -1290,9 +1408,17 @@
                 `;
                 bKey = `W2:${effectiveW2.toFixed(2)}`;
                 cKey = `W3:${w3_1618.toFixed(2)}`;
+                points = [
+                    { name: '1波低點', value: aLow, valueLabel: aLow.toFixed(2) },
+                    { name: '1波高點', value: aHigh, valueLabel: aHigh.toFixed(2) },
+                    { name: '2波低點', value: effectiveW2, valueLabel: effectiveW2.toFixed(2) },
+                    { name: '3波高點(1.618)', value: w3_1618, valueLabel: w3_1618.toFixed(2) },
+                    { name: '4波低點(38.2%)', value: w4_382, valueLabel: w4_382.toFixed(2) },
+                    { name: '5波高點(1:1)', value: w5_1000, valueLabel: w5_1000.toFixed(2) }
+                ];
             }
 
-            return { resultsHtml, bKey, cKey };
+            return { resultsHtml, bKey, cKey, points };
         }
 
         function calculate() {
@@ -1318,6 +1444,7 @@
                 const res = generateResultHtml(currentMode, stockName, aLow, aHigh);
                 document.getElementById('dynamicResults').innerHTML = res.resultsHtml;
                 document.getElementById('resultCard').style.display = 'block';
+                renderTrendChart(res.points, currentMode);
 
                 saveToHistory({
                     mainTab: 'STOCK',
@@ -1353,6 +1480,7 @@
                 const res = generateFuturesResultHtml(currentMode, futName, futLow, futHigh, pointVal);
                 document.getElementById('dynamicResults').innerHTML = res.resultsHtml;
                 document.getElementById('resultCard').style.display = 'block';
+                renderTrendChart(res.points, currentMode);
 
                 saveToHistory({
                     mainTab: 'FUTURES',
@@ -1445,6 +1573,7 @@
                         document.getElementById('futName').value = cleanName;
                         const res = generateFuturesResultHtml(item.mode || 'UP', cleanName, item.aLow, item.aHigh, item.pointVal || '200');
                         document.getElementById('dynamicResults').innerHTML = res.resultsHtml;
+                        renderTrendChart(res.points, item.mode || 'UP');
                     } else {
                         switchMainTab('STOCK');
                         switchMode(item.mode || 'UP');
@@ -1454,6 +1583,7 @@
 
                         const res = generateResultHtml(item.mode, item.stockName, parseFloat(item.aLow), parseFloat(item.aHigh));
                         document.getElementById('dynamicResults').innerHTML = res.resultsHtml;
+                        renderTrendChart(res.points, item.mode || 'UP');
                     }
                     document.getElementById('resultCard').style.display = 'block';
                 }
