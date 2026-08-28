@@ -724,8 +724,40 @@
             });
         }
 
+        /* 觸發更新 2 波低點函數 (個股) */
+        function updateStockW2(low, high, stockName) {
+            const val = parseFloat(document.getElementById('actualW2Input').value);
+            if (isNaN(val)) {
+                alert("請輸入正確的第 2 波低點價位！");
+                return;
+            }
+            if (val <= low) {
+                alert("第 2 波低點不得低於第 1 波起漲點 (" + low + ")，否則波浪理論不成立！");
+                return;
+            }
+            if (val >= high) {
+                alert("第 2 波低點必須低於第 1 波頂點 (" + high + ")！");
+                return;
+            }
+
+            const res = generateResultHtml('WAVE5', stockName, low, high, val);
+            document.getElementById('dynamicResults').innerHTML = res.resultsHtml;
+
+            // 更新歷史紀錄中的 W2/W3 點位
+            saveToHistory({
+                mainTab: 'STOCK',
+                mode: 'WAVE5',
+                stockName: stockName,
+                aLow: low,
+                aHigh: high,
+                bKey: res.bKey,
+                cKey: res.cKey,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+        }
+
         /* 核心計算：台股個股 */
-        function generateResultHtml(mode, stockName, aLow, aHigh) {
+        function generateResultHtml(mode, stockName, aLow, aHigh, actualW2Low = null) {
             let wave1 = 0;
             let resultsHtml = "";
             let bKey = "", cKey = "";
@@ -812,61 +844,188 @@
             } else if (mode === 'WAVE5') {
                 wave1 = aHigh - aLow;
                 const aPct = ((wave1 / aLow) * 100).toFixed(1);
+
+                const w2_382 = aHigh - (wave1 * 0.382);
+                const w2_500 = aHigh - (wave1 * 0.500);
                 const w2_618 = aHigh - (wave1 * 0.618);
-                const w3_1618 = w2_618 + (wave1 * 1.618);
-                const w3_2618 = w2_618 + (wave1 * 2.618);
-                const w4_382 = w3_1618 - ((w3_1618 - w2_618) * 0.382);
-                const w5_equal = w4_382 + wave1;
+
+                const isRealW2 = (actualW2Low !== null && !isNaN(actualW2Low));
+                const effectiveW2 = isRealW2 ? actualW2Low : w2_618;
+
+                // 第 3 波多重倍率計算 (以 effectiveW2 為起算基點)
+                const w3_1000 = effectiveW2 + (wave1 * 1.000);
+                const w3_1382 = effectiveW2 + (wave1 * 1.382);
+                const w3_1618 = effectiveW2 + (wave1 * 1.618);
+                const w3_2000 = effectiveW2 + (wave1 * 2.000);
+                const w3_2618 = effectiveW2 + (wave1 * 2.618);
+
+                // 第 4 波多重倍率計算 (以標準第 3 波 W3_1.618 為頂點回擋基準)
+                const w3_len = w3_1618 - effectiveW2;
+                const w4_236 = w3_1618 - (w3_len * 0.236);
+                const w4_382 = w3_1618 - (w3_len * 0.382);
+                const w4_500 = w3_1618 - (w3_len * 0.500);
+
+                // 第 5 波多重倍率計算 (以標準 4 波 W4_0.382 為底點推升基準)
+                const w5_0618 = w4_382 + (wave1 * 0.618);
+                const w5_1000 = w4_382 + (wave1 * 1.000);
+                const w5_1618 = w4_382 + (wave1 * 1.618);
+
+                const statusTag = isRealW2
+                    ? `<span style="color:#e53e3e; font-weight:bold;">[已依實際 2波低點 ${effectiveW2} 精準算牌]</span>`
+                    : `<span style="color:#718096;">[未輸入 2波低點，預設 61.8% 預測]</span>`;
 
                 resultsHtml = `
-                    <div class="section-title">🔥 【${stockName}】 1~5 波推升全波段推測</div>
-                    <p style="margin: 5px 0 15px 0; line-height: 1.6;">
+                    <div class="section-title">🔥 【${stockName}】 1~5 波推升各波常見倍率完整點位表 ${statusTag}</div>
+                    <p style="margin: 5px 0 10px 0; line-height: 1.6;">
                         1 波低點：<b>${aLow}</b> | 1 波高點：<b>${aHigh}</b><br>
                         1 波基礎漲幅：<b>${wave1.toFixed(2)} 元</b> (+${aPct}%)
                     </p>
 
-                    <div class="section-title">🌊 完整 5 波推升推估軌跡 (標準黃金比例模型)</div>
+                    <!-- 動態更新第 2 波低點模組 -->
+                    <div class="update-w2-box">
+                        <div class="update-w2-title">🎯 盤面進展：輸入「實際 2 波低點」同步更新 3~5 波多倍率數據</div>
+                        <div class="update-w2-row">
+                            <input type="number" id="actualW2Input" placeholder="請輸入實際 2 波低點 (例: ${w2_618.toFixed(2)})" value="${isRealW2 ? actualW2Low : ''}">
+                            <button onclick="updateStockW2(${aLow}, ${aHigh}, '${stockName}')" style="background:#dd6b20; color:white; border:none; padding:8px 15px; border-radius:6px; font-weight:bold; cursor:pointer; white-space:nowrap;">套用並更新</button>
+                        </div>
+                    </div>
+
+                    <!-- 第 2 波多倍率表格 -->
+                    <div class="section-title">📉 第 2 波拉回 (Wave 2) 各常見比例支撐價</div>
                     <div class="table-responsive">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>波段</th>
-                                    <th>關鍵比例算式</th>
+                                    <th>回檔比例</th>
+                                    <th>狀態與說明</th>
                                     <th>預估點位</th>
-                                    <th>波浪觀察重點</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><b>第 2 波 (拉回)</b></td>
-                                    <td>1波回檔 61.8%</td>
-                                    <td><b>${w2_618.toFixed(2)}</b></td>
-                                    <td>絕對不可跌破 1 波起點 (${aLow})</td>
-                                </tr>
-                                <tr class="highlight-w5">
-                                    <td><b>第 3 波 (主升段)</b></td>
-                                    <td>2波低點 + 1.618倍 1波長</td>
-                                    <td><b>${w3_1618.toFixed(2)}</b></td>
-                                    <td>多頭最猛烈主升段 (若超強看 ${w3_2618.toFixed(2)})</td>
+                                    <td>38.2%</td>
+                                    <td>淺幅修正 (強勢行情)</td>
+                                    <td><b>${w2_382.toFixed(2)}</b></td>
                                 </tr>
                                 <tr>
-                                    <td><b>第 4 波 (修正)</b></td>
-                                    <td>3波頂點回擋 38.2%</td>
-                                    <td><b>${w4_382.toFixed(2)}</b></td>
-                                    <td>原則上不應重疊 1 波頂點 (${aHigh})</td>
+                                    <td>50.0%</td>
+                                    <td>中性回檔線</td>
+                                    <td><b>${w2_500.toFixed(2)}</b></td>
                                 </tr>
                                 <tr class="highlight-w5">
-                                    <td><b>第 5 波 (末升段)</b></td>
-                                    <td>4波低點 + 1:1 第1波長</td>
-                                    <td><b>${w5_equal.toFixed(2)}</b></td>
-                                    <td>末升段目標區，需防範高點爆量背離</td>
+                                    <td><b>61.8% (預設)</b></td>
+                                    <td><b>${isRealW2 ? '★ 實際輸入低點基準' : '黃金比例回檔角 (預設算牌點)'}</b></td>
+                                    <td><b>${effectiveW2.toFixed(2)}</b></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 第 3 波多倍率表格 -->
+                    <div class="section-title">🚀 第 3 波主升段 (Wave 3) 各常見倍率目標價 (以 2波低點 ${effectiveW2.toFixed(2)} 算起)</div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>推升倍率</th>
+                                    <th>狀態與說明</th>
+                                    <th>預估目標點位</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1.000 倍 (基本)</td>
+                                    <td>基本主升段目標</td>
+                                    <td><b>${w3_1000.toFixed(2)}</b></td>
+                                </tr>
+                                <tr>
+                                    <td>1.382 倍 (標準)</td>
+                                    <td>標準主升段目標</td>
+                                    <td><b>${w3_1382.toFixed(2)}</b></td>
+                                </tr>
+                                <tr class="highlight-w5">
+                                    <td><b>1.618 倍 (最標準)</b></td>
+                                    <td><b>最標準主升段目標</b></td>
+                                    <td><b>${w3_1618.toFixed(2)}</b></td>
+                                </tr>
+                                <tr>
+                                    <td>2.000 倍</td>
+                                    <td>強勢主升段擴展</td>
+                                    <td><b>${w3_2000.toFixed(2)}</b></td>
+                                </tr>
+                                <tr>
+                                    <td>2.618 倍</td>
+                                    <td>超強噴出延伸段</td>
+                                    <td><b>${w3_2618.toFixed(2)}</b></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 第 4 波多倍率表格 -->
+                    <div class="section-title">📉 第 4 波修正 (Wave 4) 各常見比例支撐價 (假設 W3 頂點為 ${w3_1618.toFixed(2)})</div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>修正比例 (佔 3 波幅)</th>
+                                    <th>狀態與說明</th>
+                                    <th>預估點位</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>23.6%</td>
+                                    <td>極淺修正 (超強勢)</td>
+                                    <td><b>${w4_236.toFixed(2)}</b></td>
+                                </tr>
+                                <tr class="highlight-w5">
+                                    <td><b>38.2% (標準)</b></td>
+                                    <td><b>標準 4 波拉回 (不重疊 1 波頂點)</b></td>
+                                    <td><b>${w4_382.toFixed(2)}</b></td>
+                                </tr>
+                                <tr>
+                                    <td>50.0%</td>
+                                    <td>較深回檔 (注意防守 1波頂 ${aHigh})</td>
+                                    <td><b>${w4_500.toFixed(2)}</b></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 第 5 波多倍率表格 -->
+                    <div class="section-title">🚀 第 5 波末升段 (Wave 5) 各常見倍率目標價 (以 4波低點 ${w4_382.toFixed(2)} 算起)</div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>推升倍率 (佔 1 波幅)</th>
+                                    <th>狀態與說明</th>
+                                    <th>預估目標點位</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>0.618 倍</td>
+                                    <td>弱勢末升段 / 失敗波防範區</td>
+                                    <td><b>${w5_0618.toFixed(2)}</b></td>
+                                </tr>
+                                <tr class="highlight-w5">
+                                    <td><b>1.000 倍 (1:1等長)</b></td>
+                                    <td><b>標準末升段目標</b></td>
+                                    <td><b>${w5_1000.toFixed(2)}</b></td>
+                                </tr>
+                                <tr>
+                                    <td>1.618 倍</td>
+                                    <td>第 5 波噴出延伸段</td>
+                                    <td><b>${w5_1618.toFixed(2)}</b></td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 `;
-                bKey = `W3:${w3_1618.toFixed(2)}`;
-                cKey = `W5:${w5_equal.toFixed(2)}`;
+                bKey = `W2:${effectiveW2.toFixed(2)}`;
+                cKey = `W3:${w3_1618.toFixed(2)}`;
             }
 
             return { resultsHtml, bKey, cKey };
