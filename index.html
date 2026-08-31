@@ -462,7 +462,7 @@
         let chartState = { points: [], mode: '', series: [], visible: [] };
 
         function isStandardChartSeries(series) {
-            return ['W2 61.8%', 'W3 1.618', 'W4 38.2%', 'W5 1.000', '61.8%'].includes(series.name);
+            return series.primary === true;
         }
 
         window.onload = function() {
@@ -745,7 +745,7 @@
             const plotW = width - padL - padR;
             const plotH = height - padT - padB;
 
-            const baseSeries = [{ name: '主軸', color: lineColor, dash: '0', values: points.map(p => p.value) }];
+            const baseSeries = [{ name: '主軸', color: lineColor, dash: '0', values: points.map(p => p.value), primary: true }];
             const allSeries = (seriesList && seriesList.length > 0) ? seriesList : baseSeries;
             if (chartState.points !== points || chartState.mode !== mode || chartState.series !== seriesList) {
                 chartState = {
@@ -943,7 +943,7 @@
                 chartSeries = [
                     { name: '38.2%', color: '#f59e0b', dash: '10 6', values: [low, high, high - range * 0.382, c100] },
                     { name: '50.0%', color: '#e53e3e', dash: '2 7', values: [low, high, b500, c100] },
-                    { name: '61.8%', color: '#6d28d9', dash: '0', values: [low, high, b618, c100] }
+                    { name: '61.8%', color: '#6d28d9', dash: '0', values: [low, high, b618, c100], primary: true }
                 ];
 
             } else if (mode === 'DOWN') {
@@ -992,7 +992,7 @@
                     { name: 'C波(目標)', value: c100, valueLabel: c100.toFixed(1) }
                 ];
                 chartSeries = [
-                    { name: '38.2%', color: '#f59e0b', dash: '10 6', values: [low, high, b382, c100] },
+                    { name: '38.2%', color: '#f59e0b', dash: '10 6', values: [low, high, b382, c100], primary: true },
                     { name: '50.0%', color: '#38a169', dash: '2 7', values: [low, high, b500, c100] },
                     { name: '61.8%', color: '#2563eb', dash: '0', values: [low, high, high + range * 0.618, c100] }
                 ];
@@ -1211,17 +1211,17 @@
                 chartSeries = [
                     { name: 'W2 38.2%', color: '#f59e0b', dash: '10 6', values: [low, high, w2_382, w3_1618, w4_382, w5_1000] },
                     { name: 'W2 50%', color: '#f97316', dash: '4 6', values: [low, high, w2_500, w3_1618, w4_382, w5_1000] },
-                    { name: 'W2 61.8%', color: '#dd6b20', dash: '0', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1000] },
+                    { name: 'W2 61.8%', color: '#dd6b20', dash: '0', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1000], primary: true },
                     { name: 'W3 1.000', color: '#60a5fa', dash: '12 5', values: [low, high, effectiveW2, w3_1000, w4_382, w5_1000] },
                     { name: 'W3 1.382', color: '#3b82f6', dash: '7 5', values: [low, high, effectiveW2, w3_1382, w4_382, w5_1000] },
-                    { name: 'W3 1.618', color: '#2563eb', dash: '8 4', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1000] },
+                    { name: 'W3 1.618', color: '#2563eb', dash: '8 4', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1000], primary: true },
                     { name: 'W3 2.000', color: '#1d4ed8', dash: '3 5', values: [low, high, effectiveW2, w3_2000, w4_382, w5_1000] },
                     { name: 'W3 2.618', color: '#1e3a8a', dash: '0', values: [low, high, effectiveW2, w3_2618, w4_382, w5_1000] },
                     { name: 'W4 23.6%', color: '#a855f7', dash: '12 5', values: [low, high, effectiveW2, w3_1618, w4_236, w5_1000] },
-                    { name: 'W4 38.2%', color: '#7c3aed', dash: '7 5', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1000] },
+                    { name: 'W4 38.2%', color: '#7c3aed', dash: '7 5', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1000], primary: true },
                     { name: 'W4 50.0%', color: '#6d28d9', dash: '3 5', values: [low, high, effectiveW2, w3_1618, w4_500, w5_1000] },
                     { name: 'W5 0.618', color: '#34d399', dash: '12 5', values: [low, high, effectiveW2, w3_1618, w4_382, w5_0618] },
-                    { name: 'W5 1.000', color: '#059669', dash: '7 5', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1000] },
+                    { name: 'W5 1.000', color: '#059669', dash: '7 5', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1000], primary: true },
                     { name: 'W5 1.618', color: '#047857', dash: '0', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1618] }
                 ];
             }
@@ -1378,7 +1378,7 @@
                 chartSeries = [
                     { name: '38.2%', color: '#f59e0b', dash: '10 6', values: [aLow, aHigh, aHigh - wave1 * 0.382, c100] },
                     { name: '50.0%', color: '#e53e3e', dash: '2 7', values: [aLow, aHigh, b500, c100] },
-                    { name: '61.8%', color: '#6d28d9', dash: '0', values: [aLow, aHigh, b618, c100] }
+                    { name: '61.8%', color: '#6d28d9', dash: '0', values: [aLow, aHigh, b618, c100], primary: true }
                 ];
 
             } else if (mode === 'DOWN') {
@@ -1426,7 +1426,7 @@
                 ];
                 chartSeries = [
                     { name: '38.2%', color: '#f59e0b', dash: '10 6', values: [aLow, aHigh, aHigh + wave1 * 0.382, c100] },
-                    { name: '50.0%', color: '#38a169', dash: '2 7', values: [aLow, aHigh, b500, c100] },
+                    { name: '50.0%', color: '#38a169', dash: '2 7', values: [aLow, aHigh, b500, c100], primary: true },
                     { name: '61.8%', color: '#2563eb', dash: '0', values: [aLow, aHigh, aHigh + wave1 * 0.618, c100] }
                 ];
 
@@ -1626,17 +1626,17 @@
                 chartSeries = [
                     { name: 'W2 38.2%', color: '#f59e0b', dash: '10 6', values: [aLow, aHigh, w2_382, w3_1618, w4_382, w5_1000] },
                     { name: 'W2 50%', color: '#f97316', dash: '4 6', values: [aLow, aHigh, w2_500, w3_1618, w4_382, w5_1000] },
-                    { name: 'W2 61.8%', color: '#dd6b20', dash: '0', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1000] },
+                    { name: 'W2 61.8%', color: '#dd6b20', dash: '0', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1000], primary: true },
                     { name: 'W3 1.000', color: '#60a5fa', dash: '12 5', values: [aLow, aHigh, effectiveW2, w3_1000, w4_382, w5_1000] },
                     { name: 'W3 1.382', color: '#3b82f6', dash: '7 5', values: [aLow, aHigh, effectiveW2, w3_1382, w4_382, w5_1000] },
-                    { name: 'W3 1.618', color: '#2563eb', dash: '8 4', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1000] },
+                    { name: 'W3 1.618', color: '#2563eb', dash: '8 4', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1000], primary: true },
                     { name: 'W3 2.000', color: '#1d4ed8', dash: '3 5', values: [aLow, aHigh, effectiveW2, w3_2000, w4_382, w5_1000] },
                     { name: 'W3 2.618', color: '#1e3a8a', dash: '0', values: [aLow, aHigh, effectiveW2, w3_2618, w4_382, w5_1000] },
                     { name: 'W4 23.6%', color: '#a855f7', dash: '12 5', values: [aLow, aHigh, effectiveW2, w3_1618, w4_236, w5_1000] },
-                    { name: 'W4 38.2%', color: '#7c3aed', dash: '7 5', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1000] },
+                    { name: 'W4 38.2%', color: '#7c3aed', dash: '7 5', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1000], primary: true },
                     { name: 'W4 50.0%', color: '#6d28d9', dash: '3 5', values: [aLow, aHigh, effectiveW2, w3_1618, w4_500, w5_1000] },
                     { name: 'W5 0.618', color: '#34d399', dash: '12 5', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_0618] },
-                    { name: 'W5 1.000', color: '#059669', dash: '7 5', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1000] },
+                    { name: 'W5 1.000', color: '#059669', dash: '7 5', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1000], primary: true },
                     { name: 'W5 1.618', color: '#047857', dash: '0', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1618] }
                 ];
             }
