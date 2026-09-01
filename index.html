@@ -1273,29 +1273,51 @@
                 `;
                 bKey = `W2:${effectiveW2.toFixed(1)}`;
                 cKey = `W3:${w3_1618.toFixed(1)}`;
+                
+                // 計算調整波 ABC (標準 61.8% 黃金調整)
+                const adjWave5Range_fut = w5_1000 - w4_382;
+                const adjA_618_fut = w5_1000 - (adjWave5Range_fut * 0.618);
+                const adjB_618_fut = adjA_618_fut + ((w5_1000 - adjA_618_fut) * 0.5);
+                const adjC_618_fut = adjA_618_fut - (w5_1000 - adjA_618_fut);
+                
+                // 調整波淺幅 (38.2%) 和深幅 (78.6%) 供圖表參考
+                const adjA_382_fut = w5_1000 - (adjWave5Range_fut * 0.382);
+                const adjB_382_fut = adjA_382_fut + ((w5_1000 - adjA_382_fut) * 0.5);
+                const adjC_382_fut = adjA_382_fut - (w5_1000 - adjA_382_fut);
+                
+                const adjA_786_fut = w5_1000 - (adjWave5Range_fut * 0.786);
+                const adjB_786_fut = adjA_786_fut + ((w5_1000 - adjA_786_fut) * 0.5);
+                const adjC_786_fut = adjA_786_fut - (w5_1000 - adjA_786_fut);
+                
                 points = [
                     { name: '1波低點', value: low, valueLabel: low.toFixed(1) },
                     { name: '1波高點', value: high, valueLabel: high.toFixed(1) },
                     { name: '2波低點', value: effectiveW2, valueLabel: effectiveW2.toFixed(1) },
-                    { name: '3波高點(1.618)', value: w3_1618, valueLabel: w3_1618.toFixed(1) },
-                    { name: '4波低點(38.2%)', value: w4_382, valueLabel: w4_382.toFixed(1) },
-                    { name: '5波高點(1:1)', value: w5_1000, valueLabel: w5_1000.toFixed(1) }
+                    { name: '3波高點', value: w3_1618, valueLabel: w3_1618.toFixed(1) },
+                    { name: '4波低點', value: w4_382, valueLabel: w4_382.toFixed(1) },
+                    { name: '5波高點', value: w5_1000, valueLabel: w5_1000.toFixed(1) },
+                    { name: 'A波(61.8%)', value: adjA_618_fut, valueLabel: adjA_618_fut.toFixed(1) },
+                    { name: 'B波反彈', value: adjB_618_fut, valueLabel: adjB_618_fut.toFixed(1) },
+                    { name: 'C波目標', value: adjC_618_fut, valueLabel: adjC_618_fut.toFixed(1) }
                 ];
                 chartSeries = [
-                    { name: 'W2 38.2%', color: '#f59e0b', dash: '10 6', values: [low, high, w2_382, w3_1618, w4_382, w5_1000] },
-                    { name: 'W2 50%', color: '#f97316', dash: '4 6', values: [low, high, w2_500, w3_1618, w4_382, w5_1000] },
-                    { name: 'W2 61.8%', color: '#dd6b20', dash: '0', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1000], primary: true },
-                    { name: 'W3 1.000', color: '#60a5fa', dash: '12 5', values: [low, high, effectiveW2, w3_1000, w4_382, w5_1000] },
-                    { name: 'W3 1.382', color: '#3b82f6', dash: '7 5', values: [low, high, effectiveW2, w3_1382, w4_382, w5_1000] },
-                    { name: 'W3 1.618', color: '#2563eb', dash: '8 4', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1000], primary: true },
-                    { name: 'W3 2.000', color: '#1d4ed8', dash: '3 5', values: [low, high, effectiveW2, w3_2000, w4_382, w5_1000] },
-                    { name: 'W3 2.618', color: '#1e3a8a', dash: '0', values: [low, high, effectiveW2, w3_2618, w4_382, w5_1000] },
-                    { name: 'W4 23.6%', color: '#a855f7', dash: '12 5', values: [low, high, effectiveW2, w3_1618, w4_236, w5_1000] },
-                    { name: 'W4 38.2%', color: '#7c3aed', dash: '7 5', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1000], primary: true },
-                    { name: 'W4 50.0%', color: '#6d28d9', dash: '3 5', values: [low, high, effectiveW2, w3_1618, w4_500, w5_1000] },
-                    { name: 'W5 0.618', color: '#34d399', dash: '12 5', values: [low, high, effectiveW2, w3_1618, w4_382, w5_0618] },
-                    { name: 'W5 1.000', color: '#059669', dash: '7 5', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1000], primary: true },
-                    { name: 'W5 1.618', color: '#047857', dash: '0', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1618] }
+                    { name: 'W2 38.2%', color: '#f59e0b', dash: '10 6', values: [low, high, w2_382, w3_1618, w4_382, w5_1000, adjA_382_fut, adjB_382_fut, adjC_382_fut] },
+                    { name: 'W2 50%', color: '#f97316', dash: '4 6', values: [low, high, w2_500, w3_1618, w4_382, w5_1000, adjA_618_fut - (adjWave5Range_fut * 0.132), adjB_618_fut - (adjWave5Range_fut * 0.132), adjC_618_fut - (adjWave5Range_fut * 0.132)] },
+                    { name: 'W2 61.8%', color: '#dd6b20', dash: '0', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1000, adjA_618_fut, adjB_618_fut, adjC_618_fut], primary: true },
+                    { name: 'W3 1.000', color: '#60a5fa', dash: '12 5', values: [low, high, effectiveW2, w3_1000, w4_382, w5_1000, adjA_618_fut + (adjWave5Range_fut * 0.382), adjB_618_fut + (adjWave5Range_fut * 0.382), adjC_618_fut + (adjWave5Range_fut * 0.382)] },
+                    { name: 'W3 1.382', color: '#3b82f6', dash: '7 5', values: [low, high, effectiveW2, w3_1382, w4_382, w5_1000, adjA_618_fut + (adjWave5Range_fut * 0.618), adjB_618_fut + (adjWave5Range_fut * 0.618), adjC_618_fut + (adjWave5Range_fut * 0.618)] },
+                    { name: 'W3 1.618', color: '#2563eb', dash: '8 4', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1000, adjA_618_fut, adjB_618_fut, adjC_618_fut], primary: true },
+                    { name: 'W3 2.000', color: '#1d4ed8', dash: '3 5', values: [low, high, effectiveW2, w3_2000, w4_382, w5_1000, adjA_618_fut - (adjWave5Range_fut * 0.382), adjB_618_fut - (adjWave5Range_fut * 0.382), adjC_618_fut - (adjWave5Range_fut * 0.382)] },
+                    { name: 'W3 2.618', color: '#1e3a8a', dash: '0', values: [low, high, effectiveW2, w3_2618, w4_382, w5_1000, adjA_618_fut - (adjWave5Range_fut * 0.618), adjB_618_fut - (adjWave5Range_fut * 0.618), adjC_618_fut - (adjWave5Range_fut * 0.618)] },
+                    { name: 'W4 23.6%', color: '#a855f7', dash: '12 5', values: [low, high, effectiveW2, w3_1618, w4_236, w5_1000, adjA_382_fut, adjB_382_fut, adjC_382_fut] },
+                    { name: 'W4 38.2%', color: '#7c3aed', dash: '7 5', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1000, adjA_618_fut, adjB_618_fut, adjC_618_fut], primary: true },
+                    { name: 'W4 50.0%', color: '#6d28d9', dash: '3 5', values: [low, high, effectiveW2, w3_1618, w4_500, w5_1000, adjA_786_fut, adjB_786_fut, adjC_786_fut] },
+                    { name: 'W5 0.618', color: '#34d399', dash: '12 5', values: [low, high, effectiveW2, w3_1618, w4_382, w5_0618, adjA_618_fut, adjB_618_fut, adjC_618_fut] },
+                    { name: 'W5 1.000', color: '#059669', dash: '7 5', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1000, adjA_618_fut, adjB_618_fut, adjC_618_fut], primary: true },
+                    { name: 'W5 1.618', color: '#047857', dash: '0', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1618, adjA_618_fut, adjB_618_fut, adjC_618_fut] },
+                    { name: 'Adj 38.2%', color: '#fca5a5', dash: '12 4', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1000, adjA_382_fut, adjB_382_fut, adjC_382_fut] },
+                    { name: 'Adj 61.8% 標準', color: '#ef4444', dash: '2 4', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1000, adjA_618_fut, adjB_618_fut, adjC_618_fut], primary: true },
+                    { name: 'Adj 78.6%', color: '#991b1b', dash: '0', values: [low, high, effectiveW2, w3_1618, w4_382, w5_1000, adjA_786_fut, adjB_786_fut, adjC_786_fut] }
                 ];
             }
 
@@ -1755,29 +1777,51 @@
                 `;
                 bKey = `W2:${effectiveW2.toFixed(2)}`;
                 cKey = `W3:${w3_1618.toFixed(2)}`;
+                
+                // 計算調整波 ABC (標準 61.8% 黃金調整)
+                const adjWave5Range = w5_1000 - w4_382;
+                const adjA_618 = w5_1000 - (adjWave5Range * 0.618);
+                const adjB_618 = adjA_618 + ((w5_1000 - adjA_618) * 0.5);
+                const adjC_618 = adjA_618 - (w5_1000 - adjA_618);
+                
+                // 調整波淺幅 (38.2%) 和深幅 (78.6%) 供圖表參考
+                const adjA_382 = w5_1000 - (adjWave5Range * 0.382);
+                const adjB_382 = adjA_382 + ((w5_1000 - adjA_382) * 0.5);
+                const adjC_382 = adjA_382 - (w5_1000 - adjA_382);
+                
+                const adjA_786 = w5_1000 - (adjWave5Range * 0.786);
+                const adjB_786 = adjA_786 + ((w5_1000 - adjA_786) * 0.5);
+                const adjC_786 = adjA_786 - (w5_1000 - adjA_786);
+                
                 points = [
                     { name: '1波低點', value: aLow, valueLabel: aLow.toFixed(2) },
                     { name: '1波高點', value: aHigh, valueLabel: aHigh.toFixed(2) },
                     { name: '2波低點', value: effectiveW2, valueLabel: effectiveW2.toFixed(2) },
-                    { name: '3波高點(1.618)', value: w3_1618, valueLabel: w3_1618.toFixed(2) },
-                    { name: '4波低點(38.2%)', value: w4_382, valueLabel: w4_382.toFixed(2) },
-                    { name: '5波高點(1:1)', value: w5_1000, valueLabel: w5_1000.toFixed(2) }
+                    { name: '3波高點', value: w3_1618, valueLabel: w3_1618.toFixed(2) },
+                    { name: '4波低點', value: w4_382, valueLabel: w4_382.toFixed(2) },
+                    { name: '5波高點', value: w5_1000, valueLabel: w5_1000.toFixed(2) },
+                    { name: 'A波(61.8%)', value: adjA_618, valueLabel: adjA_618.toFixed(2) },
+                    { name: 'B波反彈', value: adjB_618, valueLabel: adjB_618.toFixed(2) },
+                    { name: 'C波目標', value: adjC_618, valueLabel: adjC_618.toFixed(2) }
                 ];
                 chartSeries = [
-                    { name: 'W2 38.2%', color: '#f59e0b', dash: '10 6', values: [aLow, aHigh, w2_382, w3_1618, w4_382, w5_1000] },
-                    { name: 'W2 50%', color: '#f97316', dash: '4 6', values: [aLow, aHigh, w2_500, w3_1618, w4_382, w5_1000] },
-                    { name: 'W2 61.8%', color: '#dd6b20', dash: '0', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1000], primary: true },
-                    { name: 'W3 1.000', color: '#60a5fa', dash: '12 5', values: [aLow, aHigh, effectiveW2, w3_1000, w4_382, w5_1000] },
-                    { name: 'W3 1.382', color: '#3b82f6', dash: '7 5', values: [aLow, aHigh, effectiveW2, w3_1382, w4_382, w5_1000] },
-                    { name: 'W3 1.618', color: '#2563eb', dash: '8 4', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1000], primary: true },
-                    { name: 'W3 2.000', color: '#1d4ed8', dash: '3 5', values: [aLow, aHigh, effectiveW2, w3_2000, w4_382, w5_1000] },
-                    { name: 'W3 2.618', color: '#1e3a8a', dash: '0', values: [aLow, aHigh, effectiveW2, w3_2618, w4_382, w5_1000] },
-                    { name: 'W4 23.6%', color: '#a855f7', dash: '12 5', values: [aLow, aHigh, effectiveW2, w3_1618, w4_236, w5_1000] },
-                    { name: 'W4 38.2%', color: '#7c3aed', dash: '7 5', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1000], primary: true },
-                    { name: 'W4 50.0%', color: '#6d28d9', dash: '3 5', values: [aLow, aHigh, effectiveW2, w3_1618, w4_500, w5_1000] },
-                    { name: 'W5 0.618', color: '#34d399', dash: '12 5', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_0618] },
-                    { name: 'W5 1.000', color: '#059669', dash: '7 5', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1000], primary: true },
-                    { name: 'W5 1.618', color: '#047857', dash: '0', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1618] }
+                    { name: 'W2 38.2%', color: '#f59e0b', dash: '10 6', values: [aLow, aHigh, w2_382, w3_1618, w4_382, w5_1000, adjA_382, adjB_382, adjC_382] },
+                    { name: 'W2 50%', color: '#f97316', dash: '4 6', values: [aLow, aHigh, w2_500, w3_1618, w4_382, w5_1000, adjA_618 - (adjWave5Range * 0.132), adjB_618 - (adjWave5Range * 0.132), adjC_618 - (adjWave5Range * 0.132)] },
+                    { name: 'W2 61.8%', color: '#dd6b20', dash: '0', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1000, adjA_618, adjB_618, adjC_618], primary: true },
+                    { name: 'W3 1.000', color: '#60a5fa', dash: '12 5', values: [aLow, aHigh, effectiveW2, w3_1000, w4_382, w5_1000, adjA_618 + (adjWave5Range * 0.382), adjB_618 + (adjWave5Range * 0.382), adjC_618 + (adjWave5Range * 0.382)] },
+                    { name: 'W3 1.382', color: '#3b82f6', dash: '7 5', values: [aLow, aHigh, effectiveW2, w3_1382, w4_382, w5_1000, adjA_618 + (adjWave5Range * 0.618), adjB_618 + (adjWave5Range * 0.618), adjC_618 + (adjWave5Range * 0.618)] },
+                    { name: 'W3 1.618', color: '#2563eb', dash: '8 4', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1000, adjA_618, adjB_618, adjC_618], primary: true },
+                    { name: 'W3 2.000', color: '#1d4ed8', dash: '3 5', values: [aLow, aHigh, effectiveW2, w3_2000, w4_382, w5_1000, adjA_618 - (adjWave5Range * 0.382), adjB_618 - (adjWave5Range * 0.382), adjC_618 - (adjWave5Range * 0.382)] },
+                    { name: 'W3 2.618', color: '#1e3a8a', dash: '0', values: [aLow, aHigh, effectiveW2, w3_2618, w4_382, w5_1000, adjA_618 - (adjWave5Range * 0.618), adjB_618 - (adjWave5Range * 0.618), adjC_618 - (adjWave5Range * 0.618)] },
+                    { name: 'W4 23.6%', color: '#a855f7', dash: '12 5', values: [aLow, aHigh, effectiveW2, w3_1618, w4_236, w5_1000, adjA_382, adjB_382, adjC_382] },
+                    { name: 'W4 38.2%', color: '#7c3aed', dash: '7 5', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1000, adjA_618, adjB_618, adjC_618], primary: true },
+                    { name: 'W4 50.0%', color: '#6d28d9', dash: '3 5', values: [aLow, aHigh, effectiveW2, w3_1618, w4_500, w5_1000, adjA_786, adjB_786, adjC_786] },
+                    { name: 'W5 0.618', color: '#34d399', dash: '12 5', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_0618, adjA_618, adjB_618, adjC_618] },
+                    { name: 'W5 1.000', color: '#059669', dash: '7 5', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1000, adjA_618, adjB_618, adjC_618], primary: true },
+                    { name: 'W5 1.618', color: '#047857', dash: '0', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1618, adjA_618, adjB_618, adjC_618] },
+                    { name: 'Adj 38.2%', color: '#fca5a5', dash: '12 4', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1000, adjA_382, adjB_382, adjC_382] },
+                    { name: 'Adj 61.8% 標準', color: '#ef4444', dash: '2 4', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1000, adjA_618, adjB_618, adjC_618], primary: true },
+                    { name: 'Adj 78.6%', color: '#991b1b', dash: '0', values: [aLow, aHigh, effectiveW2, w3_1618, w4_382, w5_1000, adjA_786, adjB_786, adjC_786] }
                 ];
             }
 
