@@ -219,6 +219,43 @@
         .tag-w5 { background: #fbd38d; color: #7b341e; }
         .tag-fut { background: #bee3f8; color: #2b6cb0; }
 
+        .wave-details {
+            margin: 18px 0;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background: #f8fafc;
+            overflow: hidden;
+        }
+        .wave-details-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 12px;
+            font-weight: bold;
+            color: #2d3748;
+            cursor: pointer;
+            user-select: none;
+            background: #f1f5f9;
+        }
+        .wave-details-header:hover { background: #e2e8f0; }
+        .wave-details-indicator {
+            display: inline-block;
+            transition: transform 0.2s ease;
+            font-size: 1.1rem;
+            color: #4a5568;
+        }
+        .wave-details.closed .wave-details-indicator {
+            transform: rotate(-90deg);
+        }
+        .wave-details-body {
+            display: block;
+            padding: 0 12px 12px;
+        }
+        .wave-details.closed .wave-details-body {
+            display: none;
+        }
+
         /* 第 2 波更新動態卡片 */
         .update-w2-box {
             background: #fffaf0;
@@ -1046,284 +1083,402 @@
                         </div>
                     </div>
 
-                    <!-- 第 2 波多倍率表格 -->
-                    <div class="section-title">📉 第 2 波拉回 (Wave 2) 各常見比例支撐價</div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>回檔比例</th>
-                                    <th>狀態與說明</th>
-                                    <th>預估指數點位</th>
-                                    <th>1口拉回浮虧點數/金額</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>38.2%</td>
-                                    <td>淺幅修正 (強勢行情)</td>
-                                    <td><b>${w2_382.toFixed(1)}</b></td>
-                                    <td>-${(high - w2_382).toFixed(1)} 點 (-NT$ ${((high - w2_382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
-                                </tr>
-                                <tr>
-                                    <td>50.0%</td>
-                                    <td>中性回檔線</td>
-                                    <td><b>${w2_500.toFixed(1)}</b></td>
-                                    <td>-${(high - w2_500).toFixed(1)} 點 (-NT$ ${((high - w2_500) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
-                                </tr>
-                                <tr class="highlight-w5">
-                                    <td><b>61.8% (預設)</b></td>
-                                    <td><b>${isRealW2 ? '★ 實際輸入低點基準' : '黃金比例回檔角 (預設算牌點)'}</b></td>
-                                    <td><b>${effectiveW2.toFixed(1)}</b></td>
-                                    <td>-${(high - effectiveW2).toFixed(1)} 點 (-NT$ ${((high - effectiveW2) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- 判斷第 3 波是否會出現的檢查模組 -->
-                    <div style="background:#fef3c7; border-left:4px solid #d97706; padding:15px; border-radius:8px; margin:15px 0; font-size:0.9rem;">
-                        <div style="font-weight:bold; color:#92400e; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
-                            <span style="font-size:1.2rem;">⚠️</span> 第 3 波判斷檢查清單
+                    <div class="wave-details">
+                        <div class="wave-details-header" role="button" tabindex="0" onclick="toggleCollapsible(this)" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleCollapsible(this); }">
+                            <span>📉 第 2 波拉回 (Wave 2)</span>
+                            <span class="wave-details-indicator">▾</span>
                         </div>
-                        <table style="width:100%; margin-top:8px; font-size:0.85rem;">
-                            <tbody>
-                                <tr style="background:#fff8e1;">
-                                    <td style="padding:8px; border:1px solid #e5b041;"><b>✓ 規則 1：第 2 波低點未破 1 波起點</b></td>
-                                    <td style="padding:8px; border:1px solid #e5b041; text-align:center;">
-                                        ${effectiveW2 > low ? '<b style="color:#059669;">✓ 符合</b>' : '<b style="color:#e53e3e;">✗ 失敗</b>'}
-                                    </td>
-                                    <td style="padding:8px; border:1px solid #e5b041; color:#666;">
-                                        1波起點: ${low.toFixed(1)} 點 / 2波低點: ${effectiveW2.toFixed(1)} 點
-                                    </td>
-                                </tr>
-                                <tr style="background:#fef9e7;">
-                                    <td style="padding:8px; border:1px solid #e5b041;"><b>✓ 規則 2：第 2 波回檔在標準範圍內</b></td>
-                                    <td style="padding:8px; border:1px solid #e5b041; text-align:center;">
-                                        ${(effectiveW2 >= (high - wave1 * 0.786) && effectiveW2 <= (high - wave1 * 0.382)) ? '<b style="color:#059669;">✓ 符合</b>' : '<b style="color:#f59e0b;">⚠ 邊界</b>'}
-                                    </td>
-                                    <td style="padding:8px; border:1px solid #e5b041; color:#666;">
-                                        回檔比例: ${((high - effectiveW2) / wave1 * 100).toFixed(1)}% (標準: 38.2~78.6%)
-                                    </td>
-                                </tr>
-                                <tr style="background:#fff8e1;">
-                                    <td style="padding:8px; border:1px solid #e5b041;"><b>✓ 規則 3：第 3 波的起動信號</b></td>
-                                    <td style="padding:8px; border:1px solid #e5b041; text-align:center;">
-                                        <b style="color:#d97706;">⏳ 待確認</b>
-                                    </td>
-                                    <td style="padding:8px; border:1px solid #e5b041; color:#666;">
-                                        需突破 1波高點 ${high.toFixed(1)} 點 + 量能放大
-                                    </td>
-                                </tr>
-                                <tr style="background:#fef9e7;">
-                                    <td style="padding:8px; border:1px solid #e5b041;"><b>⚡ 綜合判斷</b></td>
-                                    <td colspan="2" style="padding:8px; border:1px solid #e5b041;">
-                                        ${effectiveW2 > low && (effectiveW2 >= (high - wave1 * 0.786) && effectiveW2 <= (high - wave1 * 0.382)) 
-                                            ? '<span style="color:#059669; font-weight:bold;">✓ 基礎條件滿足，靜待突破 1波高點確認第 3波開始</span>'
-                                            : '<span style="color:#e53e3e; font-weight:bold;">✗ 波浪計數有問題，需重新檢視</span>'}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div style="margin-top:10px; padding:10px; background:#fff; border-radius:4px; border-left:3px solid #d97706; font-size:0.8rem; color:#4a5568; line-height:1.6;">
-                            <div style="font-weight:bold; margin-bottom:6px;">💡 交易操作建議：</div>
-                            <ul style="margin:4px 0; padding-left:16px;">
-                                <li>基礎條件滿足 → <b>不要急著進場</b>，靜待 B 波反彈</li>
-                                <li>觀察 B 波是否突破 1 波高點 ${high.toFixed(1)} 點</li>
-                                <li><b>突破 + 量能放大</b> → 第 3 波確認啟動，這是最安全進場點</li>
-                                <li>未突破 → 可能複雜調整，保持觀望</li>
-                            </ul>
+                        <div class="wave-details-body">
+                            <div class="section-title">📉 第 2 波拉回 (Wave 2) 各常見比例支撐價</div>
+                            <div class="table-responsive">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>回檔比例</th>
+                                            <th>狀態與說明</th>
+                                            <th>預估指數點位</th>
+                                            <th>1口拉回浮虧點數/金額</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>38.2%</td>
+                                            <td>淺幅修正 (強勢行情)</td>
+                                            <td><b>${w2_382.toFixed(1)}</b></td>
+                                            <td>-${(high - w2_382).toFixed(1)} 點 (-NT$ ${((high - w2_382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                        </tr>
+                                        <tr>
+                                            <td>50.0%</td>
+                                            <td>中性回檔線</td>
+                                            <td><b>${w2_500.toFixed(1)}</b></td>
+                                            <td>-${(high - w2_500).toFixed(1)} 點 (-NT$ ${((high - w2_500) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                        </tr>
+                                        <tr class="highlight-w5">
+                                            <td><b>61.8% (預設)</b></td>
+                                            <td><b>${isRealW2 ? '★ 實際輸入低點基準' : '黃金比例回檔角 (預設算牌點)'}</b></td>
+                                            <td><b>${effectiveW2.toFixed(1)}</b></td>
+                                            <td>-${(high - effectiveW2).toFixed(1)} 點 (-NT$ ${((high - effectiveW2) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- 第 3 波多倍率表格 -->
-                    <div class="section-title">🚀 第 3 波主升段 (Wave 3) 各常見倍率目標價 (以 2波低點 ${effectiveW2.toFixed(1)} 算起)</div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>推升倍率</th>
-                                    <th>狀態與說明</th>
-                                    <th>預估指數目標點位</th>
-                                    <th>1口主升段獲利點數/金額</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>1.000 倍 (基本)</td>
-                                    <td>基本主升段目標</td>
-                                    <td><b>${w3_1000.toFixed(1)}</b></td>
-                                    <td>+${(w3_1000 - effectiveW2).toFixed(1)} 點 (+NT$ ${((w3_1000 - effectiveW2) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
-                                </tr>
-                                <tr>
-                                    <td>1.382 倍 (標準)</td>
-                                    <td>標準主升段目標</td>
-                                    <td><b>${w3_1382.toFixed(1)}</b></td>
-                                    <td>+${(w3_1382 - effectiveW2).toFixed(1)} 點 (+NT$ ${((w3_1382 - effectiveW2) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
-                                </tr>
-                                <tr class="highlight-w5">
-                                    <td><b>1.618 倍 (最標準)</b></td>
-                                    <td><b>最標準主升段目標</b></td>
-                                    <td><b>${w3_1618.toFixed(1)}</b></td>
-                                    <td>+${(w3_1618 - effectiveW2).toFixed(1)} 點 (+NT$ ${((w3_1618 - effectiveW2) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
-                                </tr>
-                                <tr>
-                                    <td>2.000 倍</td>
-                                    <td>強勢主升段擴展</td>
-                                    <td><b>${w3_2000.toFixed(1)}</b></td>
-                                    <td>+${(w3_2000 - effectiveW2).toFixed(1)} 點 (+NT$ ${((w3_2000 - effectiveW2) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
-                                </tr>
-                                <tr>
-                                    <td>2.618 倍</td>
-                                    <td>超強噴出延伸段</td>
-                                    <td><b>${w3_2618.toFixed(1)}</b></td>
-                                    <td>+${(w3_2618 - effectiveW2).toFixed(1)} 點 (+NT$ ${((w3_2618 - effectiveW2) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="wave-details">
+                        <div class="wave-details-header" role="button" tabindex="0" onclick="toggleCollapsible(this)" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleCollapsible(this); }">
+                            <span>⚠️ 第 3 波判斷檢查清單</span>
+                            <span class="wave-details-indicator">▾</span>
+                        </div>
+                        <div class="wave-details-body">
+                            <div style="background:#fef3c7; border-left:4px solid #d97706; padding:15px; border-radius:8px; margin:15px 0; font-size:0.9rem;">
+                                <div style="font-weight:bold; color:#92400e; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+                                    <span style="font-size:1.2rem;">⚠️</span> 第 3 波判斷檢查清單
+                                </div>
+                                <table style="width:100%; margin-top:8px; font-size:0.85rem;">
+                                    <tbody>
+                                        <tr style="background:#fff8e1;">
+                                            <td style="padding:8px; border:1px solid #e5b041;"><b>✓ 規則 1：第 2 波低點未破 1 波起點</b></td>
+                                            <td style="padding:8px; border:1px solid #e5b041; text-align:center;">
+                                                ${effectiveW2 > low ? '<b style="color:#059669;">✓ 符合</b>' : '<b style="color:#e53e3e;">✗ 失敗</b>'}
+                                            </td>
+                                            <td style="padding:8px; border:1px solid #e5b041; color:#666;">
+                                                1波起點: ${low.toFixed(1)} 點 / 2波低點: ${effectiveW2.toFixed(1)} 點
+                                            </td>
+                                        </tr>
+                                        <tr style="background:#fef9e7;">
+                                            <td style="padding:8px; border:1px solid #e5b041;"><b>✓ 規則 2：第 2 波回檔在標準範圍內</b></td>
+                                            <td style="padding:8px; border:1px solid #e5b041; text-align:center;">
+                                                ${(effectiveW2 >= (high - wave1 * 0.786) && effectiveW2 <= (high - wave1 * 0.382)) ? '<b style="color:#059669;">✓ 符合</b>' : '<b style="color:#f59e0b;">⚠ 邊界</b>'}
+                                            </td>
+                                            <td style="padding:8px; border:1px solid #e5b041; color:#666;">
+                                                回檔比例: ${((high - effectiveW2) / wave1 * 100).toFixed(1)}% (標準: 38.2~78.6%)
+                                            </td>
+                                        </tr>
+                                        <tr style="background:#fff8e1;">
+                                            <td style="padding:8px; border:1px solid #e5b041;"><b>✓ 規則 3：第 3 波的起動信號</b></td>
+                                            <td style="padding:8px; border:1px solid #e5b041; text-align:center;">
+                                                <b style="color:#d97706;">⏳ 待確認</b>
+                                            </td>
+                                            <td style="padding:8px; border:1px solid #e5b041; color:#666;">
+                                                需突破 1波高點 ${high.toFixed(1)} 點 + 量能放大
+                                            </td>
+                                        </tr>
+                                        <tr style="background:#fef9e7;">
+                                            <td style="padding:8px; border:1px solid #e5b041;"><b>⚡ 綜合判斷</b></td>
+                                            <td colspan="2" style="padding:8px; border:1px solid #e5b041;">
+                                                ${effectiveW2 > low && (effectiveW2 >= (high - wave1 * 0.786) && effectiveW2 <= (high - wave1 * 0.382)) 
+                                                    ? '<span style="color:#059669; font-weight:bold;">✓ 基礎條件滿足，靜待突破 1波高點確認第 3波開始</span>'
+                                                    : '<span style="color:#e53e3e; font-weight:bold;">✗ 波浪計數有問題，需重新檢視</span>'}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div style="margin-top:10px; padding:10px; background:#fff; border-radius:4px; border-left:3px solid #d97706; font-size:0.8rem; color:#4a5568; line-height:1.6;">
+                                    <div style="font-weight:bold; margin-bottom:6px;">💡 交易操作建議：</div>
+                                    <ul style="margin:4px 0; padding-left:16px;">
+                                        <li>基礎條件滿足 → <b>不要急著進場</b>，靜待 B 波反彈</li>
+                                        <li>觀察 B 波是否突破 1 波高點 ${high.toFixed(1)} 點</li>
+                                        <li><b>突破 + 量能放大</b> → 第 3 波確認啟動，這是最安全進場點</li>
+                                        <li>未突破 → 可能複雜調整，保持觀望</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- 第 4 波多倍率表格 -->
-                    <div class="section-title">📉 第 4 波修正 (Wave 4) 各常見比例支撐價 (假設 W3 頂點為 ${w3_1618.toFixed(1)})</div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>修正比例 (佔 3 波幅)</th>
-                                    <th>狀態與說明</th>
-                                    <th>預估指數點位</th>
-                                    <th>1口修正拉回點數/金額</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>23.6%</td>
-                                    <td>極淺修正 (超強勢)</td>
-                                    <td><b>${w4_236.toFixed(1)}</b></td>
-                                    <td>-${(w3_1618 - w4_236).toFixed(1)} 點 (-NT$ ${((w3_1618 - w4_236) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
-                                </tr>
-                                <tr class="highlight-w5">
-                                    <td><b>38.2% (標準)</b></td>
-                                    <td><b>標準 4 波拉回 (不重疊 1 波頂點)</b></td>
-                                    <td><b>${w4_382.toFixed(1)}</b></td>
-                                    <td>-${(w3_1618 - w4_382).toFixed(1)} 點 (-NT$ ${((w3_1618 - w4_382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
-                                </tr>
-                                <tr>
-                                    <td>50.0%</td>
-                                    <td>較深回檔 (注意防守 1波頂 ${high})</td>
-                                    <td><b>${w4_500.toFixed(1)}</b></td>
-                                    <td>-${(w3_1618 - w4_500).toFixed(1)} 點 (-NT$ ${((w3_1618 - w4_500) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="wave-details">
+                        <div class="wave-details-header" role="button" tabindex="0" onclick="toggleCollapsible(this)" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleCollapsible(this); }">
+                            <span>🚀 第 3 波主升段 (Wave 3)</span>
+                            <span class="wave-details-indicator">▾</span>
+                        </div>
+                        <div class="wave-details-body">
+                            <div class="section-title">🚀 第 3 波主升段 (Wave 3) 各常見倍率目標價 (以 2波低點 ${effectiveW2.toFixed(1)} 算起)</div>
+                            <div class="table-responsive">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>推升倍率</th>
+                                            <th>狀態與說明</th>
+                                            <th>預估指數目標點位</th>
+                                            <th>1口主升段獲利點數/金額</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>1.000 倍 (基本)</td>
+                                            <td>基本主升段目標</td>
+                                            <td><b>${w3_1000.toFixed(1)}</b></td>
+                                            <td>+${(w3_1000 - effectiveW2).toFixed(1)} 點 (+NT$ ${((w3_1000 - effectiveW2) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                        </tr>
+                                        <tr>
+                                            <td>1.382 倍 (標準)</td>
+                                            <td>標準主升段目標</td>
+                                            <td><b>${w3_1382.toFixed(1)}</b></td>
+                                            <td>+${(w3_1382 - effectiveW2).toFixed(1)} 點 (+NT$ ${((w3_1382 - effectiveW2) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                        </tr>
+                                        <tr class="highlight-w5">
+                                            <td><b>1.618 倍 (最標準)</b></td>
+                                            <td><b>最標準主升段目標</b></td>
+                                            <td><b>${w3_1618.toFixed(1)}</b></td>
+                                            <td>+${(w3_1618 - effectiveW2).toFixed(1)} 點 (+NT$ ${((w3_1618 - effectiveW2) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                        </tr>
+                                        <tr>
+                                            <td>2.000 倍</td>
+                                            <td>強勢主升段擴展</td>
+                                            <td><b>${w3_2000.toFixed(1)}</b></td>
+                                            <td>+${(w3_2000 - effectiveW2).toFixed(1)} 點 (+NT$ ${((w3_2000 - effectiveW2) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                        </tr>
+                                        <tr>
+                                            <td>2.618 倍</td>
+                                            <td>超強噴出延伸段</td>
+                                            <td><b>${w3_2618.toFixed(1)}</b></td>
+                                            <td>+${(w3_2618 - effectiveW2).toFixed(1)} 點 (+NT$ ${((w3_2618 - effectiveW2) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- 第 5 波多倍率表格 -->
-                    <div class="section-title">🚀 第 5 波末升段 (Wave 5) 各常見倍率目標價 (以 4波低點 ${w4_382.toFixed(1)} 算起)</div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>推升倍率 (佔 1 波幅)</th>
-                                    <th>狀態與說明</th>
-                                    <th>預估指數目標點位</th>
-                                    <th>1口末升段獲利點數/金額</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>0.618 倍</td>
-                                    <td>弱勢末升段 / 失敗波防範區</td>
-                                    <td><b>${w5_0618.toFixed(1)}</b></td>
-                                    <td>+${(w5_0618 - w4_382).toFixed(1)} 點 (+NT$ ${((w5_0618 - w4_382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
-                                </tr>
-                                <tr class="highlight-w5">
-                                    <td><b>1.000 倍 (1:1等長)</b></td>
-                                    <td><b>標準末升段目標</b></td>
-                                    <td><b>${w5_1000.toFixed(1)}</b></td>
-                                    <td>+${(w5_1000 - w4_382).toFixed(1)} 點 (+NT$ ${((w5_1000 - w4_382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
-                                </tr>
-                                <tr>
-                                    <td>1.618 倍</td>
-                                    <td>第 5 波噴出延伸段</td>
-                                    <td><b>${w5_1618.toFixed(1)}</b></td>
-                                    <td>+${(w5_1618 - w4_382).toFixed(1)} 點 (+NT$ ${((w5_1618 - w4_382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="wave-details">
+                        <div class="wave-details-header" role="button" tabindex="0" onclick="toggleCollapsible(this)" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleCollapsible(this); }">
+                            <span>📉 第 4 波修正 (Wave 4)</span>
+                            <span class="wave-details-indicator">▾</span>
+                        </div>
+                        <div class="wave-details-body">
+                            <div class="section-title">📉 第 4 波修正 (Wave 4) 各常見比例支撐價 (假設 W3 頂點為 ${w3_1618.toFixed(1)})</div>
+                            <div class="table-responsive">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>修正比例 (佔 3 波幅)</th>
+                                            <th>狀態與說明</th>
+                                            <th>預估指數點位</th>
+                                            <th>1口修正拉回點數/金額</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>23.6%</td>
+                                            <td>極淺修正 (超強勢)</td>
+                                            <td><b>${w4_236.toFixed(1)}</b></td>
+                                            <td>-${(w3_1618 - w4_236).toFixed(1)} 點 (-NT$ ${((w3_1618 - w4_236) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                        </tr>
+                                        <tr class="highlight-w5">
+                                            <td><b>38.2% (標準)</b></td>
+                                            <td><b>標準 4 波拉回 (不重疊 1 波頂點)</b></td>
+                                            <td><b>${w4_382.toFixed(1)}</b></td>
+                                            <td>-${(w3_1618 - w4_382).toFixed(1)} 點 (-NT$ ${((w3_1618 - w4_382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                        </tr>
+                                        <tr>
+                                            <td>50.0%</td>
+                                            <td>較深回檔 (注意防守 1波頂 ${high})</td>
+                                            <td><b>${w4_500.toFixed(1)}</b></td>
+                                            <td>-${(w3_1618 - w4_500).toFixed(1)} 點 (-NT$ ${((w3_1618 - w4_500) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- 調整波 ABC 計算 (基於第 5 波高點) -->
-                    <div class="section-title">📊 調整波 ABC 修正區間 (5波完成後接續走勢)</div>
-                    <p style="margin: 5px 0 15px 0; line-height: 1.6; color:#718096;">
-                        <i>當第 5 波於 <b>${w5_1000.toFixed(1)} 點</b> 完成後，市場通常進入 ABC 調整。下表顯示不同回檔幅度下的調整波支撐與目標。</i>
-                    </p>
-                    
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>回檔幅度</th>
-                                    <th>A 波預估低點</th>
-                                    <th>趨勢判斷</th>
-                                    <th>B 波反彈預估 (50% 反彈)</th>
-                                    <th>C 波下跌目標 (1:1 等長)</th>
-                                    <th>損益/點數</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>38.2%</td>
-                                    <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.382).toFixed(1)}</b></td>
-                                    <td>淺幅調整，多頭強勢</td>
-                                    <td>${(w5_1000 - (w5_1000 - w4_382) * 0.382 + ((w5_1000 - (w5_1000 - w4_382) * 0.382 - w4_382) * 0.5)).toFixed(1)}</td>
-                                    <td>${(w5_1000 - (w5_1000 - w4_382) * 0.382 - ((w5_1000 - (w5_1000 - w4_382) * 0.382) - w4_382)).toFixed(1)}</td>
-                                    <td>-${((w5_1000 - w4_382) * 0.382).toFixed(1)} 點 (-NT$ ${(((w5_1000 - w4_382) * 0.382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
-                                </tr>
-                                <tr>
-                                    <td>50.0%</td>
-                                    <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.5).toFixed(1)}</b></td>
-                                    <td>中性回檔線</td>
-                                    <td>${(w5_1000 - (w5_1000 - w4_382) * 0.5 + ((w5_1000 - (w5_1000 - w4_382) * 0.5 - w4_382) * 0.5)).toFixed(1)}</td>
-                                    <td>${(w5_1000 - (w5_1000 - w4_382) * 0.5 - ((w5_1000 - (w5_1000 - w4_382) * 0.5) - w4_382)).toFixed(1)}</td>
-                                    <td>-${((w5_1000 - w4_382) * 0.5).toFixed(1)} 點 (-NT$ ${(((w5_1000 - w4_382) * 0.5) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
-                                </tr>
-                                <tr class="highlight-w5">
-                                    <td><b>61.8%</b></td>
-                                    <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.618).toFixed(1)}</b></td>
-                                    <td><b>黃金回檔區 (標準調整)</b></td>
-                                    <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.618 + ((w5_1000 - (w5_1000 - w4_382) * 0.618 - w4_382) * 0.5)).toFixed(1)}</b></td>
-                                    <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.618 - ((w5_1000 - (w5_1000 - w4_382) * 0.618) - w4_382)).toFixed(1)}</b></td>
-                                    <td><b>-${((w5_1000 - w4_382) * 0.618).toFixed(1)} 點 (-NT$ ${(((w5_1000 - w4_382) * 0.618) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</b></td>
-                                </tr>
-                                <tr>
-                                    <td>78.6%</td>
-                                    <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.786).toFixed(1)}</b></td>
-                                    <td>深度回檔，須留意反轉</td>
-                                    <td>${(w5_1000 - (w5_1000 - w4_382) * 0.786 + ((w5_1000 - (w5_1000 - w4_382) * 0.786 - w4_382) * 0.5)).toFixed(1)}</td>
-                                    <td>${(w5_1000 - (w5_1000 - w4_382) * 0.786 - ((w5_1000 - (w5_1000 - w4_382) * 0.786) - w4_382)).toFixed(1)}</td>
-                                    <td>-${((w5_1000 - w4_382) * 0.786).toFixed(1)} 點 (-NT$ ${(((w5_1000 - w4_382) * 0.786) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
-                                </tr>
-                                <tr>
-                                    <td>100%</td>
-                                    <td><b style="color:#e53e3e;">${w4_382.toFixed(1)}</b></td>
-                                    <td style="color:#e53e3e;"><b>回到第 4 波低點，上升趨勢恐已反轉</b></td>
-                                    <td>${(w4_382 + ((w5_1000 - w4_382) * 0.5)).toFixed(1)}</td>
-                                    <td style="color:#e53e3e;"><b>${(w4_382 - (w5_1000 - w4_382)).toFixed(1)}</b></td>
-                                    <td style="color:#e53e3e;"><b>-${(w5_1000 - w4_382).toFixed(1)} 點 (-NT$ ${((w5_1000 - w4_382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</b></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="wave-details">
+                        <div class="wave-details-header" role="button" tabindex="0" onclick="toggleCollapsible(this)" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleCollapsible(this); }">
+                            <span>🚀 第 5 波末升段 (Wave 5)</span>
+                            <span class="wave-details-indicator">▾</span>
+                        </div>
+                        <div class="wave-details-body">
+                            <div class="section-title">🚀 第 5 波末升段 (Wave 5) 各常見倍率目標價 (以 4波低點 ${w4_382.toFixed(1)} 算起)</div>
+                            <div class="table-responsive">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>推升倍率 (佔 1 波幅)</th>
+                                            <th>狀態與說明</th>
+                                            <th>預估指數目標點位</th>
+                                            <th>1口末升段獲利點數/金額</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>0.618 倍</td>
+                                            <td>弱勢末升段 / 失敗波防範區</td>
+                                            <td><b>${w5_0618.toFixed(1)}</b></td>
+                                            <td>+${(w5_0618 - w4_382).toFixed(1)} 點 (+NT$ ${((w5_0618 - w4_382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                        </tr>
+                                        <tr class="highlight-w5">
+                                            <td><b>1.000 倍 (1:1等長)</b></td>
+                                            <td><b>標準末升段目標</b></td>
+                                            <td><b>${w5_1000.toFixed(1)}</b></td>
+                                            <td>+${(w5_1000 - w4_382).toFixed(1)} 點 (+NT$ ${((w5_1000 - w4_382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                        </tr>
+                                        <tr>
+                                            <td>1.618 倍</td>
+                                            <td>第 5 波噴出延伸段</td>
+                                            <td><b>${w5_1618.toFixed(1)}</b></td>
+                                            <td>+${(w5_1618 - w4_382).toFixed(1)} 點 (+NT$ ${((w5_1618 - w4_382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
 
-                    <div style="background:#f0fff4; border-left:4px solid #38a169; padding:12px; border-radius:6px; margin-top:15px; font-size:0.9rem;">
-                        <div style="font-weight:bold; color:#276749; margin-bottom:6px;">💡 調整波交易建議：</div>
-                        <ul style="margin:6px 0; padding-left:20px; color:#4a5568; line-height:1.6;">
-                            <li><b>38.2% 淺幅調整</b>：多頭強勢，在 A 波回檔時可考慮加碼做多</li>
-                            <li><b>61.8% 黃金調整</b>：標準調整，在 B 波反彈高點觀察能否突破高點</li>
-                            <li><b>78.6% 以上深幅調整</b>：需謹慎，觀察是否有新的上升動能</li>
-                            <li><b>100% 回到 W4 低點</b>：<b style="color:#e53e3e;">波浪計數失效，上升趨勢可能反轉</b></li>
-                        </ul>
+                    <div class="wave-details" data-open="true">
+                        <div class="wave-details-header" role="button" tabindex="0" onclick="toggleCollapsible(this)" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleCollapsible(this); }">
+                            <span>📌 調整波 ABC / 觀盤重點（點此收合／展開）</span>
+                            <span class="wave-details-indicator">▾</span>
+                        </div>
+                        <div class="wave-details-body">
+                            <div class="section-title">📊 調整波 ABC 修正區間 (5波完成後接續走勢)</div>
+                            <p style="margin: 5px 0 15px 0; line-height: 1.6; color:#718096;">
+                                <i>當第 5 波於 <b>${w5_1000.toFixed(1)} 點</b> 完成後，市場通常進入 ABC 調整。下表顯示不同回檔幅度下的調整波支撐與目標。</i>
+                            </p>
+                            
+                            <div class="table-responsive">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>回檔幅度</th>
+                                            <th>A 波預估低點</th>
+                                            <th>趨勢判斷</th>
+                                            <th>B 波反彈預估 (50% 反彈)</th>
+                                            <th>C 波下跌目標 (1:1 等長)</th>
+                                            <th>損益/點數</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>38.2%</td>
+                                            <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.382).toFixed(1)}</b></td>
+                                            <td>淺幅調整，多頭強勢</td>
+                                            <td>${(w5_1000 - (w5_1000 - w4_382) * 0.382 + ((w5_1000 - (w5_1000 - w4_382) * 0.382 - w4_382) * 0.5)).toFixed(1)}</td>
+                                            <td>${(w5_1000 - (w5_1000 - w4_382) * 0.382 - ((w5_1000 - (w5_1000 - w4_382) * 0.382) - w4_382)).toFixed(1)}</td>
+                                            <td>-${((w5_1000 - w4_382) * 0.382).toFixed(1)} 點 (-NT$ ${(((w5_1000 - w4_382) * 0.382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                        </tr>
+                                        <tr>
+                                            <td>50.0%</td>
+                                            <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.5).toFixed(1)}</b></td>
+                                            <td>中性回檔線</td>
+                                            <td>${(w5_1000 - (w5_1000 - w4_382) * 0.5 + ((w5_1000 - (w5_1000 - w4_382) * 0.5 - w4_382) * 0.5)).toFixed(1)}</td>
+                                            <td>${(w5_1000 - (w5_1000 - w4_382) * 0.5 - ((w5_1000 - (w5_1000 - w4_382) * 0.5) - w4_382)).toFixed(1)}</td>
+                                            <td>-${((w5_1000 - w4_382) * 0.5).toFixed(1)} 點 (-NT$ ${(((w5_1000 - w4_382) * 0.5) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                        </tr>
+                                        <tr class="highlight-w5">
+                                            <td><b>61.8%</b></td>
+                                            <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.618).toFixed(1)}</b></td>
+                                            <td><b>黃金回檔區 (標準調整)</b></td>
+                                            <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.618 + ((w5_1000 - (w5_1000 - w4_382) * 0.618 - w4_382) * 0.5)).toFixed(1)}</b></td>
+                                            <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.618 - ((w5_1000 - (w5_1000 - w4_382) * 0.618) - w4_382)).toFixed(1)}</b></td>
+                                            <td><b>-${((w5_1000 - w4_382) * 0.618).toFixed(1)} 點 (-NT$ ${(((w5_1000 - w4_382) * 0.618) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>78.6%</td>
+                                            <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.786).toFixed(1)}</b></td>
+                                            <td>深度回檔，須留意反轉</td>
+                                            <td>${(w5_1000 - (w5_1000 - w4_382) * 0.786 + ((w5_1000 - (w5_1000 - w4_382) * 0.786 - w4_382) * 0.5)).toFixed(1)}</td>
+                                            <td>${(w5_1000 - (w5_1000 - w4_382) * 0.786 - ((w5_1000 - (w5_1000 - w4_382) * 0.786) - w4_382)).toFixed(1)}</td>
+                                            <td>-${((w5_1000 - w4_382) * 0.786).toFixed(1)} 點 (-NT$ ${(((w5_1000 - w4_382) * 0.786) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</td>
+                                        </tr>
+                                        <tr>
+                                            <td>100%</td>
+                                            <td><b style="color:#e53e3e;">${w4_382.toFixed(1)}</b></td>
+                                            <td style="color:#e53e3e;"><b>回到第 4 波低點，上升趨勢恐已反轉</b></td>
+                                            <td>${(w4_382 + ((w5_1000 - w4_382) * 0.5)).toFixed(1)}</td>
+                                            <td style="color:#e53e3e;"><b>${(w4_382 - (w5_1000 - w4_382)).toFixed(1)}</b></td>
+                                            <td style="color:#e53e3e;"><b>-${(w5_1000 - w4_382).toFixed(1)} 點 (-NT$ ${((w5_1000 - w4_382) * pointVal).toLocaleString(undefined, {maximumFractionDigits:0})})</b></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div style="background:#f0fff4; border-left:4px solid #38a169; padding:12px; border-radius:6px; margin-top:15px; font-size:0.9rem;">
+                                <div style="font-weight:bold; color:#276749; margin-bottom:6px;">💡 調整波交易建議：</div>
+                                <ul style="margin:6px 0; padding-left:20px; color:#4a5568; line-height:1.6;">
+                                    <li><b>38.2% 淺幅調整</b>：多頭強勢，在 A 波回檔時可考慮加碼做多</li>
+                                    <li><b>61.8% 黃金調整</b>：標準調整，在 B 波反彈高點觀察能否突破高點</li>
+                                    <li><b>78.6% 以上深幅調整</b>：需謹慎，觀察是否有新的上升動能</li>
+                                    <li><b>100% 回到 W4 低點</b>：<b style="color:#e53e3e;">波浪計數失效，上升趨勢可能反轉</b></li>
+                                </ul>
+                            </div>
+
+                            <div style="background:#fef5e7; border-left:4px solid #d97706; padding:15px; border-radius:8px; margin:20px 0; font-size:0.9rem;">
+                                <div style="font-weight:bold; color:#92400e; margin-bottom:12px; display:flex; align-items:center; gap:6px; font-size:1rem;">
+                                    <span style="font-size:1.3rem;">📊</span> 調整波 ABC 完成後的觀盤重點
+                                </div>
+                                
+                                <div style="background:#fff; border-radius:6px; padding:12px; margin-bottom:12px; border-left:3px solid #d97706;">
+                                    <div style="font-weight:bold; color:#7c2d12; margin-bottom:8px;">🎯 第一階段：確認 C 波底部完成</div>
+                                    <ul style="margin:4px 0; padding-left:20px; color:#5a4a42; line-height:1.7; font-size:0.9rem;">
+                                        <li><b>關鍵價位：${(w5_1000 - (w5_1000 - w4_382) * 0.618).toFixed(1)}</b> 點 (61.8% 標準調整的 A 波)</li>
+                                        <li>觀察 C 波是否觸及<b>預期目標 ${(w5_1000 - (w5_1000 - w4_382) * 0.618 - ((w5_1000 - (w5_1000 - w4_382) * 0.618) - w4_382)).toFixed(1)}</b> 點 (1:1 等長)</li>
+                                        <li>✓ 觸及目標 = C 波完成信號明確，準備迎接新一輪上升</li>
+                                        <li>⚠ 未觸及目標 = 需檢查是否為複雜調整 (abc-abc-abc 或 abc-x-abc)</li>
+                                        <li style="color:#e53e3e;">✗ 跌破關鍵支撐 = 五波上升結束，進入下一輪大級別下跌調整</li>
+                                    </ul>
+                                </div>
+
+                                <div style="background:#fff; border-radius:6px; padding:12px; margin-bottom:12px; border-left:3px solid #d97706;">
+                                    <div style="font-weight:bold; color:#7c2d12; margin-bottom:8px;">📈 第二階段：新一輪上升的起點信號</div>
+                                    <ul style="margin:4px 0; padding-left:20px; color:#5a4a42; line-height:1.7; font-size:0.9rem;">
+                                        <li><b>確認信號：突破 B 波反彈高點 ${(w5_1000 - (w5_1000 - w4_382) * 0.618 + ((w5_1000 - (w5_1000 - w4_382) * 0.618 - w4_382) * 0.5)).toFixed(1)}</b> 點</li>
+                                        <li>這代表調整波真正結束，市場準備啟動下一級別上升</li>
+                                        <li>✓ 第一個進場點：突破 B 波高點 + 量能放大時買進</li>
+                                        <li>次要觀察：能否收復 ${w5_1000.toFixed(1)} 點 (5 波高點)？</li>
+                                        <li><b>重要提示：</b>不要在 C 波下跌中搶底，要等待 B 波反彈確認後再進場</li>
+                                    </ul>
+                                </div>
+
+                                <div style="background:#fff; border-radius:6px; padding:12px; margin-bottom:12px; border-left:3px solid #d97706;">
+                                    <div style="font-weight:bold; color:#7c2d12; margin-bottom:8px;">⚡ 第三階段：新一輪五波結構的辨識</div>
+                                    <ul style="margin:4px 0; padding-left:20px; color:#5a4a42; line-height:1.7; font-size:0.9rem;">
+                                        <li><b>新 1 波起點：</b>C 波的低點 ${(w5_1000 - (w5_1000 - w4_382) * 0.618 - ((w5_1000 - (w5_1000 - w4_382) * 0.618) - w4_382)).toFixed(1)} 點</li>
+                                        <li>當價格從此低點開始上升時，計算新 1 波漲幅</li>
+                                        <li>預計第二個新 1 波會因應級別跳升而更加壯觀</li>
+                                        <li>使用同樣方法計算新的 2、3、4、5 波目標</li>
+                                        <li style="color:#d97706;"><b>進階提示：</b>每個新的五波週期通常會比前一個週期走勢更強（基於艾略特波浪延伸性特徵）</li>
+                                    </ul>
+                                </div>
+
+                                <div style="background:#fff; border-radius:6px; padding:12px; border-left:3px solid #d97706;">
+                                    <div style="font-weight:bold; color:#7c2d12; margin-bottom:8px;">🚨 風險警示與防守點</div>
+                                    <table style="width:100%; margin-top:8px; font-size:0.85rem;">
+                                        <tbody>
+                                            <tr style="background:#fef5e7;">
+                                                <td style="padding:8px; border:1px solid #d97706;"><b>風險點位</b></td>
+                                                <td style="padding:8px; border:1px solid #d97706;"><b>價格 (點數)</b></td>
+                                                <td style="padding:8px; border:1px solid #d97706;"><b>含義</b></td>
+                                            </tr>
+                                            <tr style="background:#fef9e7;">
+                                                <td style="padding:8px; border:1px solid #d97706;">🟢 安全區</td>
+                                                <td style="padding:8px; border:1px solid #d97706;">${(w5_1000 - (w5_1000 - w4_382) * 0.618).toFixed(1)} ~ ${w5_1000.toFixed(1)}</td>
+                                                <td style="padding:8px; border:1px solid #d97706;">A 波-5 波高點區間，適合持有</td>
+                                            </tr>
+                                            <tr style="background:#fef5e7;">
+                                                <td style="padding:8px; border:1px solid #d97706;">🟡 觀察區</td>
+                                                <td style="padding:8px; border:1px solid #d97706;">${(w5_1000 - (w5_1000 - w4_382) * 0.786).toFixed(1)} ~ ${(w5_1000 - (w5_1000 - w4_382) * 0.618).toFixed(1)}</td>
+                                                <td style="padding:8px; border:1px solid #d97706;">78.6% 深幅調整區，謹慎觀察</td>
+                                            </tr>
+                                            <tr style="background:#fef9e7;">
+                                                <td style="padding:8px; border:1px solid #d97706;">🔴 危險區</td>
+                                                <td style="padding:8px; border:1px solid #d97706;">跌破 ${w4_382.toFixed(1)} 點</td>
+                                                <td style="padding:8px; border:1px solid #d97706;">回到 4 波低點，五波結構失效，停損範圍</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div style="margin-top:12px; padding:10px; background:#fff3cd; border-radius:4px; border-left:3px solid #d97706; font-size:0.85rem; color:#5a4a42; line-height:1.6;">
+                                    <div style="font-weight:bold; margin-bottom:6px;">💡 實戰操作流程：</div>
+                                    <div style="margin:4px 0;"><b>第 1 步：確認</b> → C 波是否觸及預期低點 ${(w5_1000 - (w5_1000 - w4_382) * 0.618 - ((w5_1000 - (w5_1000 - w4_382) * 0.618) - w4_382)).toFixed(1)} 點</div>
+                                    <div style="margin:4px 0;"><b>第 2 步：等待</b> → B 波反彈高點 ${(w5_1000 - (w5_1000 - w4_382) * 0.618 + ((w5_1000 - (w5_1000 - w4_382) * 0.618 - w4_382) * 0.5)).toFixed(1)} 點 + 量能放大</div>
+                                    <div style="margin:4px 0;"><b>第 3 步：進場</b> → 突破 B 波高點，確認新一輪上升開始</div>
+                                    <div style="margin:4px 0;"><b>第 4 步：計算</b> → 重新計算新 1 波漲幅，預測新的 2~5 波目標</div>
+                                    <div style="margin:4px 0;"><b>第 5 步：防守</b> → 設定停損點在 4 波低點 ${w4_382.toFixed(1)} 點下方</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 `;
                 bKey = `W2:${effectiveW2.toFixed(1)}`;
@@ -1629,39 +1784,51 @@
                         </div>
                     </div>
 
-                    <!-- 第 2 波多倍率表格 -->
-                    <div class="section-title">📉 第 2 波拉回 (Wave 2) 各常見比例支撐價</div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>回檔比例</th>
-                                    <th>狀態與說明</th>
-                                    <th>預估點位</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>38.2%</td>
-                                    <td>淺幅修正 (強勢行情)</td>
-                                    <td><b>${w2_382.toFixed(2)}</b></td>
-                                </tr>
-                                <tr>
-                                    <td>50.0%</td>
-                                    <td>中性回檔線</td>
-                                    <td><b>${w2_500.toFixed(2)}</b></td>
-                                </tr>
-                                <tr class="highlight-w5">
-                                    <td><b>61.8% (預設)</b></td>
-                                    <td><b>${isRealW2 ? '★ 實際輸入低點基準' : '黃金比例回檔角 (預設算牌點)'}</b></td>
-                                    <td><b>${effectiveW2.toFixed(2)}</b></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="wave-details">
+                        <div class="wave-details-header" role="button" tabindex="0" onclick="toggleCollapsible(this)" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleCollapsible(this); }">
+                            <span>📉 第 2 波拉回 (Wave 2)</span>
+                            <span class="wave-details-indicator">▾</span>
+                        </div>
+                        <div class="wave-details-body">
+                            <div class="section-title">📉 第 2 波拉回 (Wave 2) 各常見比例支撐價</div>
+                            <div class="table-responsive">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>回檔比例</th>
+                                            <th>狀態與說明</th>
+                                            <th>預估點位</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>38.2%</td>
+                                            <td>淺幅修正 (強勢行情)</td>
+                                            <td><b>${w2_382.toFixed(2)}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>50.0%</td>
+                                            <td>中性回檔線</td>
+                                            <td><b>${w2_500.toFixed(2)}</b></td>
+                                        </tr>
+                                        <tr class="highlight-w5">
+                                            <td><b>61.8% (預設)</b></td>
+                                            <td><b>${isRealW2 ? '★ 實際輸入低點基準' : '黃金比例回檔角 (預設算牌點)'}</b></td>
+                                            <td><b>${effectiveW2.toFixed(2)}</b></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- 判斷第 3 波是否會出現的檢查模組 -->
-                    <div style="background:#fef3c7; border-left:4px solid #d97706; padding:15px; border-radius:8px; margin:15px 0; font-size:0.9rem;">
+                    <div class="wave-details">
+                        <div class="wave-details-header" role="button" tabindex="0" onclick="toggleCollapsible(this)" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleCollapsible(this); }">
+                            <span>⚠️ 第 3 波判斷檢查清單</span>
+                            <span class="wave-details-indicator">▾</span>
+                        </div>
+                        <div class="wave-details-body">
+                            <div style="background:#fef3c7; border-left:4px solid #d97706; padding:15px; border-radius:8px; margin:15px 0; font-size:0.9rem;">
                         <div style="font-weight:bold; color:#92400e; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
                             <span style="font-size:1.2rem;">⚠️</span> 第 3 波判斷檢查清單
                         </div>
@@ -1715,174 +1882,278 @@
                         </div>
                     </div>
 
-                    <!-- 第 3 波多倍率表格 -->
-                    <div class="section-title">🚀 第 3 波主升段 (Wave 3) 各常見倍率目標價 (以 2波低點 ${effectiveW2.toFixed(2)} 算起)</div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>推升倍率</th>
-                                    <th>狀態與說明</th>
-                                    <th>預估目標點位</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>1.000 倍 (基本)</td>
-                                    <td>基本主升段目標</td>
-                                    <td><b>${w3_1000.toFixed(2)}</b></td>
-                                </tr>
-                                <tr>
-                                    <td>1.382 倍 (標準)</td>
-                                    <td>標準主升段目標</td>
-                                    <td><b>${w3_1382.toFixed(2)}</b></td>
-                                </tr>
-                                <tr class="highlight-w5">
-                                    <td><b>1.618 倍 (最標準)</b></td>
-                                    <td><b>最標準主升段目標</b></td>
-                                    <td><b>${w3_1618.toFixed(2)}</b></td>
-                                </tr>
-                                <tr>
-                                    <td>2.000 倍</td>
-                                    <td>強勢主升段擴展</td>
-                                    <td><b>${w3_2000.toFixed(2)}</b></td>
-                                </tr>
-                                <tr>
-                                    <td>2.618 倍</td>
-                                    <td>超強噴出延伸段</td>
-                                    <td><b>${w3_2618.toFixed(2)}</b></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="wave-details">
+                        <div class="wave-details-header" role="button" tabindex="0" onclick="toggleCollapsible(this)" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleCollapsible(this); }">
+                            <span>🚀 第 3 波主升段 (Wave 3)</span>
+                            <span class="wave-details-indicator">▾</span>
+                        </div>
+                        <div class="wave-details-body">
+                            <div class="section-title">🚀 第 3 波主升段 (Wave 3) 各常見倍率目標價 (以 2波低點 ${effectiveW2.toFixed(2)} 算起)</div>
+                            <div class="table-responsive">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>推升倍率</th>
+                                            <th>狀態與說明</th>
+                                            <th>預估目標點位</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>1.000 倍 (基本)</td>
+                                            <td>基本主升段目標</td>
+                                            <td><b>${w3_1000.toFixed(2)}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>1.382 倍 (標準)</td>
+                                            <td>標準主升段目標</td>
+                                            <td><b>${w3_1382.toFixed(2)}</b></td>
+                                        </tr>
+                                        <tr class="highlight-w5">
+                                            <td><b>1.618 倍 (最標準)</b></td>
+                                            <td><b>最標準主升段目標</b></td>
+                                            <td><b>${w3_1618.toFixed(2)}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>2.000 倍</td>
+                                            <td>強勢主升段擴展</td>
+                                            <td><b>${w3_2000.toFixed(2)}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>2.618 倍</td>
+                                            <td>超強噴出延伸段</td>
+                                            <td><b>${w3_2618.toFixed(2)}</b></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- 第 4 波多倍率表格 -->
-                    <div class="section-title">📉 第 4 波修正 (Wave 4) 各常見比例支撐價 (假設 W3 頂點為 ${w3_1618.toFixed(2)})</div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>修正比例 (佔 3 波幅)</th>
-                                    <th>狀態與說明</th>
-                                    <th>預估點位</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>23.6%</td>
-                                    <td>極淺修正 (超強勢)</td>
-                                    <td><b>${w4_236.toFixed(2)}</b></td>
-                                </tr>
-                                <tr class="highlight-w5">
-                                    <td><b>38.2% (標準)</b></td>
-                                    <td><b>標準 4 波拉回 (不重疊 1 波頂點)</b></td>
-                                    <td><b>${w4_382.toFixed(2)}</b></td>
-                                </tr>
-                                <tr>
-                                    <td>50.0%</td>
-                                    <td>較深回檔 (注意防守 1波頂 ${aHigh})</td>
-                                    <td><b>${w4_500.toFixed(2)}</b></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="wave-details">
+                        <div class="wave-details-header" role="button" tabindex="0" onclick="toggleCollapsible(this)" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleCollapsible(this); }">
+                            <span>📉 第 4 波修正 (Wave 4)</span>
+                            <span class="wave-details-indicator">▾</span>
+                        </div>
+                        <div class="wave-details-body">
+                            <div class="section-title">📉 第 4 波修正 (Wave 4) 各常見比例支撐價 (假設 W3 頂點為 ${w3_1618.toFixed(2)})</div>
+                            <div class="table-responsive">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>修正比例 (佔 3 波幅)</th>
+                                            <th>狀態與說明</th>
+                                            <th>預估點位</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>23.6%</td>
+                                            <td>極淺修正 (超強勢)</td>
+                                            <td><b>${w4_236.toFixed(2)}</b></td>
+                                        </tr>
+                                        <tr class="highlight-w5">
+                                            <td><b>38.2% (標準)</b></td>
+                                            <td><b>標準 4 波拉回 (不重疊 1 波頂點)</b></td>
+                                            <td><b>${w4_382.toFixed(2)}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>50.0%</td>
+                                            <td>較深回檔 (注意防守 1波頂 ${aHigh})</td>
+                                            <td><b>${w4_500.toFixed(2)}</b></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- 第 5 波多倍率表格 -->
-                    <div class="section-title">🚀 第 5 波末升段 (Wave 5) 各常見倍率目標價 (以 4波低點 ${w4_382.toFixed(2)} 算起)</div>
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>推升倍率 (佔 1 波幅)</th>
-                                    <th>狀態與說明</th>
-                                    <th>預估目標點位</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>0.618 倍</td>
-                                    <td>弱勢末升段 / 失敗波防範區</td>
-                                    <td><b>${w5_0618.toFixed(2)}</b></td>
-                                </tr>
-                                <tr class="highlight-w5">
-                                    <td><b>1.000 倍 (1:1等長)</b></td>
-                                    <td><b>標準末升段目標</b></td>
-                                    <td><b>${w5_1000.toFixed(2)}</b></td>
-                                </tr>
-                                <tr>
-                                    <td>1.618 倍</td>
-                                    <td>第 5 波噴出延伸段</td>
-                                    <td><b>${w5_1618.toFixed(2)}</b></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="wave-details">
+                        <div class="wave-details-header" role="button" tabindex="0" onclick="toggleCollapsible(this)" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleCollapsible(this); }">
+                            <span>🚀 第 5 波末升段 (Wave 5)</span>
+                            <span class="wave-details-indicator">▾</span>
+                        </div>
+                        <div class="wave-details-body">
+                            <div class="section-title">🚀 第 5 波末升段 (Wave 5) 各常見倍率目標價 (以 4波低點 ${w4_382.toFixed(2)} 算起)</div>
+                            <div class="table-responsive">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>推升倍率 (佔 1 波幅)</th>
+                                            <th>狀態與說明</th>
+                                            <th>預估目標點位</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>0.618 倍</td>
+                                            <td>弱勢末升段 / 失敗波防範區</td>
+                                            <td><b>${w5_0618.toFixed(2)}</b></td>
+                                        </tr>
+                                        <tr class="highlight-w5">
+                                            <td><b>1.000 倍 (1:1等長)</b></td>
+                                            <td><b>標準末升段目標</b></td>
+                                            <td><b>${w5_1000.toFixed(2)}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>1.618 倍</td>
+                                            <td>第 5 波噴出延伸段</td>
+                                            <td><b>${w5_1618.toFixed(2)}</b></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- 調整波 ABC 計算 (基於第 5 波高點) -->
-                    <div class="section-title">📊 調整波 ABC 修正區間 (5波完成後接續走勢)</div>
-                    <p style="margin: 5px 0 15px 0; line-height: 1.6; color:#718096;">
-                        <i>當第 5 波於 <b>${w5_1000.toFixed(2)}</b> 完成後，市場通常進入 ABC 調整。下表顯示不同回檔幅度下的調整波支撐與目標。</i>
-                    </p>
-                    
-                    <div class="table-responsive">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>回檔幅度</th>
-                                    <th>A 波預估低點</th>
-                                    <th>趨勢判斷</th>
-                                    <th>B 波反彈預估 (50% 反彈)</th>
-                                    <th>C 波下跌目標 (1:1 等長)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>38.2%</td>
-                                    <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.382).toFixed(2)}</b></td>
-                                    <td>淺幅調整，多頭強勢</td>
-                                    <td>${(w5_1000 - (w5_1000 - w4_382) * 0.382 + ((w5_1000 - (w5_1000 - w4_382) * 0.382 - w4_382) * 0.5)).toFixed(2)}</td>
-                                    <td>${(w5_1000 - (w5_1000 - w4_382) * 0.382 - ((w5_1000 - (w5_1000 - w4_382) * 0.382) - w4_382)).toFixed(2)}</td>
-                                </tr>
-                                <tr>
-                                    <td>50.0%</td>
-                                    <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.5).toFixed(2)}</b></td>
-                                    <td>中性回檔線</td>
-                                    <td>${(w5_1000 - (w5_1000 - w4_382) * 0.5 + ((w5_1000 - (w5_1000 - w4_382) * 0.5 - w4_382) * 0.5)).toFixed(2)}</td>
-                                    <td>${(w5_1000 - (w5_1000 - w4_382) * 0.5 - ((w5_1000 - (w5_1000 - w4_382) * 0.5) - w4_382)).toFixed(2)}</td>
-                                </tr>
-                                <tr class="highlight-w5">
-                                    <td><b>61.8%</b></td>
-                                    <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.618).toFixed(2)}</b></td>
-                                    <td><b>黃金回檔區 (標準調整)</b></td>
-                                    <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.618 + ((w5_1000 - (w5_1000 - w4_382) * 0.618 - w4_382) * 0.5)).toFixed(2)}</b></td>
-                                    <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.618 - ((w5_1000 - (w5_1000 - w4_382) * 0.618) - w4_382)).toFixed(2)}</b></td>
-                                </tr>
-                                <tr>
-                                    <td>78.6%</td>
-                                    <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.786).toFixed(2)}</b></td>
-                                    <td>深度回檔，須留意反轉</td>
-                                    <td>${(w5_1000 - (w5_1000 - w4_382) * 0.786 + ((w5_1000 - (w5_1000 - w4_382) * 0.786 - w4_382) * 0.5)).toFixed(2)}</td>
-                                    <td>${(w5_1000 - (w5_1000 - w4_382) * 0.786 - ((w5_1000 - (w5_1000 - w4_382) * 0.786) - w4_382)).toFixed(2)}</td>
-                                </tr>
-                                <tr>
-                                    <td>100%</td>
-                                    <td><b style="color:#e53e3e;">${w4_382.toFixed(2)}</b></td>
-                                    <td style="color:#e53e3e;"><b>回到第 4 波低點，上升趨勢恐已反轉</b></td>
-                                    <td>${(w4_382 + ((w5_1000 - w4_382) * 0.5)).toFixed(2)}</td>
-                                    <td style="color:#e53e3e;"><b>${(w4_382 - (w5_1000 - w4_382)).toFixed(2)}</b></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    <div class="wave-details" data-open="true">
+                        <div class="wave-details-header" role="button" tabindex="0" onclick="toggleCollapsible(this)" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleCollapsible(this); }">
+                            <span>📌 調整波 ABC / 觀盤重點（點此收合／展開）</span>
+                            <span class="wave-details-indicator">▾</span>
+                        </div>
+                        <div class="wave-details-body">
+                            <div class="section-title">📊 調整波 ABC 修正區間 (5波完成後接續走勢)</div>
+                            <p style="margin: 5px 0 15px 0; line-height: 1.6; color:#718096;">
+                                <i>當第 5 波於 <b>${w5_1000.toFixed(2)}</b> 完成後，市場通常進入 ABC 調整。下表顯示不同回檔幅度下的調整波支撐與目標。</i>
+                            </p>
+                            
+                            <div class="table-responsive">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>回檔幅度</th>
+                                            <th>A 波預估低點</th>
+                                            <th>趨勢判斷</th>
+                                            <th>B 波反彈預估 (50% 反彈)</th>
+                                            <th>C 波下跌目標 (1:1 等長)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>38.2%</td>
+                                            <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.382).toFixed(2)}</b></td>
+                                            <td>淺幅調整，多頭強勢</td>
+                                            <td>${(w5_1000 - (w5_1000 - w4_382) * 0.382 + ((w5_1000 - (w5_1000 - w4_382) * 0.382 - w4_382) * 0.5)).toFixed(2)}</td>
+                                            <td>${(w5_1000 - (w5_1000 - w4_382) * 0.382 - ((w5_1000 - (w5_1000 - w4_382) * 0.382) - w4_382)).toFixed(2)}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>50.0%</td>
+                                            <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.5).toFixed(2)}</b></td>
+                                            <td>中性回檔線</td>
+                                            <td>${(w5_1000 - (w5_1000 - w4_382) * 0.5 + ((w5_1000 - (w5_1000 - w4_382) * 0.5 - w4_382) * 0.5)).toFixed(2)}</td>
+                                            <td>${(w5_1000 - (w5_1000 - w4_382) * 0.5 - ((w5_1000 - (w5_1000 - w4_382) * 0.5) - w4_382)).toFixed(2)}</td>
+                                        </tr>
+                                        <tr class="highlight-w5">
+                                            <td><b>61.8%</b></td>
+                                            <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.618).toFixed(2)}</b></td>
+                                            <td><b>黃金回檔區 (標準調整)</b></td>
+                                            <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.618 + ((w5_1000 - (w5_1000 - w4_382) * 0.618 - w4_382) * 0.5)).toFixed(2)}</b></td>
+                                            <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.618 - ((w5_1000 - (w5_1000 - w4_382) * 0.618) - w4_382)).toFixed(2)}</b></td>
+                                        </tr>
+                                        <tr>
+                                            <td>78.6%</td>
+                                            <td><b>${(w5_1000 - (w5_1000 - w4_382) * 0.786).toFixed(2)}</b></td>
+                                            <td>深度回檔，須留意反轉</td>
+                                            <td>${(w5_1000 - (w5_1000 - w4_382) * 0.786 + ((w5_1000 - (w5_1000 - w4_382) * 0.786 - w4_382) * 0.5)).toFixed(2)}</td>
+                                            <td>${(w5_1000 - (w5_1000 - w4_382) * 0.786 - ((w5_1000 - (w5_1000 - w4_382) * 0.786) - w4_382)).toFixed(2)}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>100%</td>
+                                            <td><b style="color:#e53e3e;">${w4_382.toFixed(2)}</b></td>
+                                            <td style="color:#e53e3e;"><b>回到第 4 波低點，上升趨勢恐已反轉</b></td>
+                                            <td>${(w4_382 + ((w5_1000 - w4_382) * 0.5)).toFixed(2)}</td>
+                                            <td style="color:#e53e3e;"><b>${(w4_382 - (w5_1000 - w4_382)).toFixed(2)}</b></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
 
-                    <div style="background:#f0fff4; border-left:4px solid #38a169; padding:12px; border-radius:6px; margin-top:15px; font-size:0.9rem;">
-                        <div style="font-weight:bold; color:#276749; margin-bottom:6px;">💡 調整波交易建議：</div>
-                        <ul style="margin:6px 0; padding-left:20px; color:#4a5568; line-height:1.6;">
-                            <li><b>38.2% 淺幅調整</b>：多頭強勢，在 A 波回檔時可考慮加碼做多</li>
-                            <li><b>61.8% 黃金調整</b>：標準調整，在 B 波反彈高點觀察能否突破高點</li>
-                            <li><b>78.6% 以上深幅調整</b>：需謹慎，觀察是否有新的上升動能</li>
-                            <li><b>100% 回到 W4 低點</b>：<b style="color:#e53e3e;">波浪計數失效，上升趨勢可能反轉</b></li>
-                        </ul>
+                            <div style="background:#f0fff4; border-left:4px solid #38a169; padding:12px; border-radius:6px; margin-top:15px; font-size:0.9rem;">
+                                <div style="font-weight:bold; color:#276749; margin-bottom:6px;">💡 調整波交易建議：</div>
+                                <ul style="margin:6px 0; padding-left:20px; color:#4a5568; line-height:1.6;">
+                                    <li><b>38.2% 淺幅調整</b>：多頭強勢，在 A 波回檔時可考慮加碼做多</li>
+                                    <li><b>61.8% 黃金調整</b>：標準調整，在 B 波反彈高點觀察能否突破高點</li>
+                                    <li><b>78.6% 以上深幅調整</b>：需謹慎，觀察是否有新的上升動能</li>
+                                    <li><b>100% 回到 W4 低點</b>：<b style="color:#e53e3e;">波浪計數失效，上升趨勢可能反轉</b></li>
+                                </ul>
+                            </div>
+
+                            <div style="background:#fef5e7; border-left:4px solid #d97706; padding:15px; border-radius:8px; margin:20px 0; font-size:0.9rem;">
+                                <div style="font-weight:bold; color:#92400e; margin-bottom:12px; display:flex; align-items:center; gap:6px; font-size:1rem;">
+                                    <span style="font-size:1.3rem;">📊</span> 調整波 ABC 完成後的觀盤重點
+                                </div>
+                                
+                                <div style="background:#fff; border-radius:6px; padding:12px; margin-bottom:12px; border-left:3px solid #d97706;">
+                                    <div style="font-weight:bold; color:#7c2d12; margin-bottom:8px;">🎯 第一階段：確認 C 波底部完成</div>
+                                    <ul style="margin:4px 0; padding-left:20px; color:#5a4a42; line-height:1.7; font-size:0.9rem;">
+                                        <li><b>關鍵價位：${(w5_1000 - (w5_1000 - w4_382) * 0.618).toFixed(2)}</b> (61.8% 標準調整的 A 波)</li>
+                                        <li>觀察 C 波是否觸及<b>預期目標 ${(w5_1000 - (w5_1000 - w4_382) * 0.618 - ((w5_1000 - (w5_1000 - w4_382) * 0.618) - w4_382)).toFixed(2)}</b> (1:1 等長)</li>
+                                        <li>✓ 觸及目標 = C 波完成信號明確，準備迎接新一輪上升</li>
+                                        <li>⚠ 未觸及目標 = 需檢查是否為複雜調整 (abc-abc-abc 或 abc-x-abc)</li>
+                                        <li style="color:#e53e3e;">✗ 跌破關鍵支撐 = 五波上升結束，進入下一輪大級別下跌調整</li>
+                                    </ul>
+                                </div>
+
+                                <div style="background:#fff; border-radius:6px; padding:12px; margin-bottom:12px; border-left:3px solid #d97706;">
+                                    <div style="font-weight:bold; color:#7c2d12; margin-bottom:8px;">📈 第二階段：新一輪上升的起點信號</div>
+                                    <ul style="margin:4px 0; padding-left:20px; color:#5a4a42; line-height:1.7; font-size:0.9rem;">
+                                        <li><b>確認信號：突破 B 波反彈高點 ${(w5_1000 - (w5_1000 - w4_382) * 0.618 + ((w5_1000 - (w5_1000 - w4_382) * 0.618 - w4_382) * 0.5)).toFixed(2)}</b></li>
+                                        <li>這代表調整波真正結束，市場準備啟動下一級別上升</li>
+                                        <li>✓ 第一個進場點：突破 B 波高點 + 量能放大時買進</li>
+                                        <li>次要觀察：能否收復 ${w5_1000.toFixed(2)} (5 波高點)？</li>
+                                        <li><b>重要提示：</b>不要在 C 波下跌中搶底，要等待 B 波反彈確認後再進場</li>
+                                    </ul>
+                                </div>
+
+                                <div style="background:#fff; border-radius:6px; padding:12px; margin-bottom:12px; border-left:3px solid #d97706;">
+                                    <div style="font-weight:bold; color:#7c2d12; margin-bottom:8px;">⚡ 第三階段：新一輪五波結構的辨識</div>
+                                    <ul style="margin:4px 0; padding-left:20px; color:#5a4a42; line-height:1.7; font-size:0.9rem;">
+                                        <li><b>新 1 波起點：</b>C 波的低點 ${(w5_1000 - (w5_1000 - w4_382) * 0.618 - ((w5_1000 - (w5_1000 - w4_382) * 0.618) - w4_382)).toFixed(2)}</li>
+                                        <li>當價格從此低點開始上升時，計算新 1 波漲幅</li>
+                                        <li>預計第二個新 1 波會因應級別跳升而更加壯觀</li>
+                                        <li>使用同樣方法計算新的 2、3、4、5 波目標</li>
+                                        <li style="color:#d97706;"><b>進階提示：</b>每個新的五波週期通常會比前一個週期走勢更強（基於艾略特波浪延伸性特徵）</li>
+                                    </ul>
+                                </div>
+
+                                <div style="background:#fff; border-radius:6px; padding:12px; border-left:3px solid #d97706;">
+                                    <div style="font-weight:bold; color:#7c2d12; margin-bottom:8px;">🚨 風險警示與防守點</div>
+                                    <table style="width:100%; margin-top:8px; font-size:0.85rem;">
+                                        <tbody>
+                                            <tr style="background:#fef5e7;">
+                                                <td style="padding:8px; border:1px solid #d97706;"><b>風險點位</b></td>
+                                                <td style="padding:8px; border:1px solid #d97706;"><b>價格</b></td>
+                                                <td style="padding:8px; border:1px solid #d97706;"><b>含義</b></td>
+                                            </tr>
+                                            <tr style="background:#fef9e7;">
+                                                <td style="padding:8px; border:1px solid #d97706;">🟢 安全區</td>
+                                                <td style="padding:8px; border:1px solid #d97706;">${(w5_1000 - (w5_1000 - w4_382) * 0.618).toFixed(2)} ~ ${w5_1000.toFixed(2)}</td>
+                                                <td style="padding:8px; border:1px solid #d97706;">A 波-5 波高點區間，適合持有</td>
+                                            </tr>
+                                            <tr style="background:#fef5e7;">
+                                                <td style="padding:8px; border:1px solid #d97706;">🟡 觀察區</td>
+                                                <td style="padding:8px; border:1px solid #d97706;">${(w5_1000 - (w5_1000 - w4_382) * 0.786).toFixed(2)} ~ ${(w5_1000 - (w5_1000 - w4_382) * 0.618).toFixed(2)}</td>
+                                                <td style="padding:8px; border:1px solid #d97706;">78.6% 深幅調整區，謹慎觀察</td>
+                                            </tr>
+                                            <tr style="background:#fef9e7;">
+                                                <td style="padding:8px; border:1px solid #d97706;">🔴 危險區</td>
+                                                <td style="padding:8px; border:1px solid #d97706;">跌破 ${w4_382.toFixed(2)}</td>
+                                                <td style="padding:8px; border:1px solid #d97706;">回到 4 波低點，五波結構失效，停損範圍</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div style="margin-top:12px; padding:10px; background:#fff3cd; border-radius:4px; border-left:3px solid #d97706; font-size:0.85rem; color:#5a4a42; line-height:1.6;">
+                                    <div style="font-weight:bold; margin-bottom:6px;">💡 實戰操作流程：</div>
+                                    <div style="margin:4px 0;"><b>第 1 步：確認</b> → C 波是否觸及預期低點 ${(w5_1000 - (w5_1000 - w4_382) * 0.618 - ((w5_1000 - (w5_1000 - w4_382) * 0.618) - w4_382)).toFixed(2)}</div>
+                                    <div style="margin:4px 0;"><b>第 2 步：等待</b> → B 波反彈高點 ${(w5_1000 - (w5_1000 - w4_382) * 0.618 + ((w5_1000 - (w5_1000 - w4_382) * 0.618 - w4_382) * 0.5)).toFixed(2)} + 量能放大</div>
+                                    <div style="margin:4px 0;"><b>第 3 步：進場</b> → 突破 B 波高點，確認新一輪上升開始</div>
+                                    <div style="margin:4px 0;"><b>第 4 步：計算</b> → 重新計算新 1 波漲幅，預測新的 2~5 波目標</div>
+                                    <div style="margin:4px 0;"><b>第 5 步：防守</b> → 設定停損點在 4 波低點 ${w4_382.toFixed(2)} 下方</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 `;
                 bKey = `W2:${effectiveW2.toFixed(2)}`;
@@ -1936,6 +2207,12 @@
             }
 
             return { resultsHtml, bKey, cKey, points, chartSeries };
+        }
+
+        function toggleCollapsible(el) {
+            const wrapper = el.closest('.wave-details');
+            if (!wrapper) return;
+            wrapper.classList.toggle('closed');
         }
 
         function calculate() {
