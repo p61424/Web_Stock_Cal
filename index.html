@@ -255,6 +255,27 @@
         .wave-details.closed .wave-details-body {
             display: none;
         }
+        .adjustment-subsection-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .adjustment-subsection-header:hover { opacity: 0.82; }
+        .adjustment-subsection-indicator {
+            flex-shrink: 0;
+            color: #718096;
+            font-size: 1rem;
+            transition: transform 0.2s ease;
+        }
+        .adjustment-subsection.closed .adjustment-subsection-indicator {
+            transform: rotate(-90deg);
+        }
+        .adjustment-subsection.closed > :not(.adjustment-subsection-header) {
+            display: none;
+        }
 
         /* 第 2 波更新動態卡片 */
         .update-w2-box {
@@ -516,6 +537,7 @@
 
             switchMainTab('STOCK');
             switchMode('UP');
+            observeAdjustmentSections();
             calculate();
         };
 
@@ -1441,6 +1463,25 @@
                                     </ul>
                                 </div>
 
+                                <div style="background:#fff; border-radius:6px; padding:12px; margin-bottom:12px; border-left:3px solid #3182ce;">
+                                    <div style="font-weight:bold; color:#2b6cb0; margin-bottom:8px;">📋 第四階段：籌碼與情緒交叉確認</div>
+                                    <div class="table-responsive">
+                                        <table style="width:100%; margin-top:8px; font-size:0.85rem;">
+                                            <thead>
+                                                <tr>
+                                                    <th>價格結構</th><th>成交量</th><th>融資增減</th><th>未平倉量 P/C Ratio</th><th>判斷</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr style="background:#f0fff4;"><td>100% 附近止跌，突破 B 波高點</td><td>突破放量</td><td>下跌整理時融資減少</td><td>高檔後回落</td><td><b style="color:#059669;">偏多確認</b></td></tr>
+                                                <tr style="background:#fff5f5;"><td>跌破 W4 低點，反彈站不回</td><td>跌破放量、反彈量縮</td><td>融資仍增加或未有效下降</td><td>持續升高</td><td><b style="color:#e53e3e;">偏空警戒</b></td></tr>
+                                                <tr style="background:#fef9e7;"><td>價格止跌但尚未突破 B 波高點</td><td>量能不明</td><td>融資與價格不同步</td><td>極高或極低</td><td><b style="color:#d97706;">訊號未確認，持續觀察</b></td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div style="margin-top:8px; color:#4a5568; line-height:1.6; font-size:0.8rem;">※ 未平倉量 P/C Ratio 反映市場情緒，Put 與 Call 都有買賣雙方，請搭配價格突破、成交量與融資變化判斷，不宜單獨作為進出場訊號。</div>
+                                </div>
+
                                 <div style="background:#fff; border-radius:6px; padding:12px; border-left:3px solid #d97706;">
                                     <div style="font-weight:bold; color:#7c2d12; margin-bottom:8px;">🚨 風險警示與防守點</div>
                                     <table style="width:100%; margin-top:8px; font-size:0.85rem;">
@@ -2116,6 +2157,25 @@
                                     </ul>
                                 </div>
 
+                                <div style="background:#fff; border-radius:6px; padding:12px; margin-bottom:12px; border-left:3px solid #3182ce;">
+                                    <div style="font-weight:bold; color:#2b6cb0; margin-bottom:8px;">📋 第四階段：籌碼與情緒交叉確認</div>
+                                    <div class="table-responsive">
+                                        <table style="width:100%; margin-top:8px; font-size:0.85rem;">
+                                            <thead>
+                                                <tr>
+                                                    <th>價格結構</th><th>成交量</th><th>融資增減</th><th>未平倉量 P/C Ratio</th><th>判斷</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr style="background:#f0fff4;"><td>100% 附近止跌，突破 B 波高點</td><td>突破放量</td><td>下跌整理時融資減少</td><td>高檔後回落</td><td><b style="color:#059669;">偏多確認</b></td></tr>
+                                                <tr style="background:#fff5f5;"><td>跌破 W4 低點，反彈站不回</td><td>跌破放量、反彈量縮</td><td>融資仍增加或未有效下降</td><td>持續升高</td><td><b style="color:#e53e3e;">偏空警戒</b></td></tr>
+                                                <tr style="background:#fef9e7;"><td>價格止跌但尚未突破 B 波高點</td><td>量能不明</td><td>融資與價格不同步</td><td>極高或極低</td><td><b style="color:#d97706;">訊號未確認，持續觀察</b></td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div style="margin-top:8px; color:#4a5568; line-height:1.6; font-size:0.8rem;">※ 未平倉量 P/C Ratio 反映市場情緒，Put 與 Call 都有買賣雙方，請搭配價格突破、成交量與融資變化判斷，不宜單獨作為進出場訊號。</div>
+                                </div>
+
                                 <div style="background:#fff; border-radius:6px; padding:12px; border-left:3px solid #d97706;">
                                     <div style="font-weight:bold; color:#7c2d12; margin-bottom:8px;">🚨 風險警示與防守點</div>
                                     <table style="width:100%; margin-top:8px; font-size:0.85rem;">
@@ -2213,6 +2273,57 @@
             const wrapper = el.closest('.wave-details');
             if (!wrapper) return;
             wrapper.classList.toggle('closed');
+        }
+
+        function enhanceAdjustmentSections() {
+            document.querySelectorAll('.wave-details').forEach(section => {
+                const sectionHeader = Array.from(section.querySelectorAll('.wave-details-header'))
+                    .find(header => header.textContent.includes('調整波 ABC'));
+                if (!sectionHeader || !sectionHeader.textContent.includes('調整波 ABC')) return;
+
+                const titlePatterns = [
+                    '第一階段：',
+                    '第二階段：',
+                    '第三階段：',
+                    '第四階段：',
+                    '調整波交易建議：',
+                    '風險警示與防守點'
+                ];
+
+                Array.from(section.querySelectorAll('div')).forEach(child => {
+                    if (child.dataset.subsectionReady || child.classList.contains('wave-details-header')) return;
+                    const title = child.firstElementChild;
+                    const titleText = title?.textContent.trim() || '';
+                    if (!title || child.children.length < 2 || !titlePatterns.some(pattern => titleText.includes(pattern))) return;
+
+                    child.dataset.subsectionReady = 'true';
+                    child.classList.add('adjustment-subsection');
+                    title.classList.add('adjustment-subsection-header');
+                    title.setAttribute('role', 'button');
+                    title.setAttribute('tabindex', '0');
+                    const indicator = document.createElement('span');
+                    indicator.className = 'adjustment-subsection-indicator';
+                    indicator.textContent = '▾';
+                    title.appendChild(indicator);
+
+                    const toggle = () => child.classList.toggle('closed');
+                    title.addEventListener('click', toggle);
+                    title.addEventListener('keydown', event => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            toggle();
+                        }
+                    });
+                });
+            });
+        }
+
+        function observeAdjustmentSections() {
+            const results = document.getElementById('dynamicResults');
+            if (!results) return;
+            const observer = new MutationObserver(enhanceAdjustmentSections);
+            observer.observe(results, { childList: true, subtree: true });
+            enhanceAdjustmentSections();
         }
 
         function calculate() {
