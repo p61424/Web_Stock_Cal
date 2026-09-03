@@ -276,6 +276,21 @@
         .adjustment-subsection.closed > :not(.adjustment-subsection-header) {
             display: none;
         }
+        .pc-direction-btn {
+            padding: 5px 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            background: white;
+            color: #4a5568;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        .pc-direction-btn.active {
+            border-color: #3182ce;
+            background: #ebf8ff;
+            color: #2b6cb0;
+            font-weight: bold;
+        }
 
         /* 第 2 波更新動態卡片 */
         .update-w2-box {
@@ -1480,6 +1495,29 @@
                                         </table>
                                     </div>
                                     <div style="margin-top:8px; color:#4a5568; line-height:1.6; font-size:0.8rem;">※ 未平倉量 P/C Ratio 反映市場情緒，Put 與 Call 都有買賣雙方，請搭配價格突破、成交量與融資變化判斷，不宜單獨作為進出場訊號。</div>
+                                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:10px; padding:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px;">
+                                        <label for="pcRatioInput" style="margin:0;">輸入目前 P/C Ratio：</label>
+                                        <input id="pcRatioInput" type="number" min="0" step="1" placeholder="例如 115" style="width:120px; padding:6px 8px;" oninput="updatePCRatioSentiment(this.value)">
+                                        <span style="font-size:0.8rem; color:#718096;">變化方向：</span>
+                                        <button type="button" class="pc-direction-btn" onclick="setPCRatioDirection('上升', this)">上升</button>
+                                        <button type="button" class="pc-direction-btn" onclick="setPCRatioDirection('下降', this)">下降</button>
+                                        <button type="button" class="pc-direction-btn" onclick="setPCRatioDirection('高檔回落', this)">高檔回落</button>
+                                        <button type="button" class="pc-direction-btn" onclick="setPCRatioDirection('低檔回升', this)">低檔回升</button>
+                                        <strong id="pcRatioSentiment" style="color:#718096;">尚未輸入</strong>
+                                    </div>
+                                    <div style="margin-top:10px; color:#2d3748; font-weight:bold; font-size:0.85rem;">📌 P/C Ratio 未平倉量情緒參考</div>
+                                    <div class="table-responsive">
+                                        <table style="width:100%; margin-top:6px; font-size:0.8rem;">
+                                            <thead><tr><th>P/C Ratio</th><th>市場情緒</th><th>配合價格的解讀</th></tr></thead>
+                                            <tbody>
+                                                <tr><td>&lt; 70%</td><td>偏樂觀，可能過熱</td><td>價格轉弱時留意反轉</td></tr>
+                                                <tr><td>70% ~ 100%</td><td>中性至偏多</td><td>需由突破與成交量確認</td></tr>
+                                                <tr><td>100% ~ 130%</td><td>偏保守，避險升高</td><td>價格止跌時觀察恐慌是否降溫</td></tr>
+                                                <tr><td>&gt; 130%</td><td>偏恐慌，情緒極端</td><td>止跌可留意反向修復，跌破則偏空</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div style="margin-top:6px; color:#718096; line-height:1.5; font-size:0.75rem;">※ 以上為一般觀察門檻，請以該商品自身的歷史區間或分位數校準；P/C Ratio 上升代表避險情緒增加，不等於價格必然下跌。</div>
                                 </div>
 
                                 <div style="background:#fff; border-radius:6px; padding:12px; border-left:3px solid #d97706;">
@@ -2174,6 +2212,29 @@
                                         </table>
                                     </div>
                                     <div style="margin-top:8px; color:#4a5568; line-height:1.6; font-size:0.8rem;">※ 未平倉量 P/C Ratio 反映市場情緒，Put 與 Call 都有買賣雙方，請搭配價格突破、成交量與融資變化判斷，不宜單獨作為進出場訊號。</div>
+                                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:10px; padding:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px;">
+                                        <label for="pcRatioInput" style="margin:0;">輸入目前 P/C Ratio：</label>
+                                        <input id="pcRatioInput" type="number" min="0" step="1" placeholder="例如 115" style="width:120px; padding:6px 8px;" oninput="updatePCRatioSentiment(this.value)">
+                                        <span style="font-size:0.8rem; color:#718096;">變化方向：</span>
+                                        <button type="button" class="pc-direction-btn" onclick="setPCRatioDirection('上升', this)">上升</button>
+                                        <button type="button" class="pc-direction-btn" onclick="setPCRatioDirection('下降', this)">下降</button>
+                                        <button type="button" class="pc-direction-btn" onclick="setPCRatioDirection('高檔回落', this)">高檔回落</button>
+                                        <button type="button" class="pc-direction-btn" onclick="setPCRatioDirection('低檔回升', this)">低檔回升</button>
+                                        <strong id="pcRatioSentiment" style="color:#718096;">尚未輸入</strong>
+                                    </div>
+                                    <div style="margin-top:10px; color:#2d3748; font-weight:bold; font-size:0.85rem;">📌 P/C Ratio 未平倉量情緒參考</div>
+                                    <div class="table-responsive">
+                                        <table style="width:100%; margin-top:6px; font-size:0.8rem;">
+                                            <thead><tr><th>P/C Ratio</th><th>市場情緒</th><th>配合價格的解讀</th></tr></thead>
+                                            <tbody>
+                                                <tr><td>&lt; 70%</td><td>偏樂觀，可能過熱</td><td>價格轉弱時留意反轉</td></tr>
+                                                <tr><td>70% ~ 100%</td><td>中性至偏多</td><td>需由突破與成交量確認</td></tr>
+                                                <tr><td>100% ~ 130%</td><td>偏保守，避險升高</td><td>價格止跌時觀察恐慌是否降溫</td></tr>
+                                                <tr><td>&gt; 130%</td><td>偏恐慌，情緒極端</td><td>止跌可留意反向修復，跌破則偏空</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div style="margin-top:6px; color:#718096; line-height:1.5; font-size:0.75rem;">※ 以上為一般觀察門檻，請以該商品自身的歷史區間或分位數校準；P/C Ratio 上升代表避險情緒增加，不等於價格必然下跌。</div>
                                 </div>
 
                                 <div style="background:#fff; border-radius:6px; padding:12px; border-left:3px solid #d97706;">
@@ -2324,6 +2385,42 @@
             const observer = new MutationObserver(enhanceAdjustmentSections);
             observer.observe(results, { childList: true, subtree: true });
             enhanceAdjustmentSections();
+        }
+
+        function updatePCRatioSentiment(value) {
+            const output = document.getElementById('pcRatioSentiment');
+            const direction = window.currentPCRatioDirection || '';
+            const ratioPercentValue = parseFloat(value);
+            if (!output) return;
+            if (!Number.isFinite(ratioPercentValue) || ratioPercentValue < 0) {
+                output.textContent = '尚未輸入';
+                output.style.color = '#718096';
+                return;
+            }
+
+            const ratio = ratioPercentValue / 100;
+            const ratioPercent = `${ratioPercentValue.toFixed(0)}%`;
+            const directionHint = direction ? `（目前${direction}）` : '';
+            if (ratio < 0.7) {
+                output.textContent = `${ratioPercent}，偏樂觀，可能過熱：價格轉弱時留意反轉${directionHint}`;
+                output.style.color = '#e53e3e';
+            } else if (ratio < 1.0) {
+                output.textContent = `${ratioPercent}，中性至偏多：仍需突破與成交量確認${directionHint}`;
+                output.style.color = '#059669';
+            } else if (ratio <= 1.3) {
+                output.textContent = `${ratioPercent}，偏保守，避險升高：觀察恐慌是否降溫${directionHint}`;
+                output.style.color = '#d97706';
+            } else {
+                output.textContent = `${ratioPercent}，偏恐慌，情緒極端：止跌可觀察修復，跌破則偏空${directionHint}`;
+                output.style.color = '#991b1b';
+            }
+        }
+
+        function setPCRatioDirection(direction, button) {
+            window.currentPCRatioDirection = direction;
+            document.querySelectorAll('.pc-direction-btn').forEach(item => item.classList.remove('active'));
+            button.classList.add('active');
+            updatePCRatioSentiment(document.getElementById('pcRatioInput')?.value || '');
         }
 
         function calculate() {
